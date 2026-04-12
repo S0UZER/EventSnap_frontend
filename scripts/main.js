@@ -1,6 +1,10 @@
-const sidebar = document.querySelector('.sidebar');
-const collapseBtn = document.getElementById('sidebarCollapse');
+const sidebar = document.getElementById('sidebar');
+const toggleBtn = document.getElementById('sidebarToggle');
 
-collapseBtn?.addEventListener('click', () => {
-    sidebar.classList.toggle('collapsed');
+console.log('sidebar:', sidebar);
+console.log('toggleBtn:', toggleBtn);
+
+toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('sidebar--expanded');
+    console.log('toggled:', sidebar.classList.contains('sidebar--expanded'));
 });

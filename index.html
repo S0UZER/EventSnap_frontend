@@ -7,30 +7,44 @@
     <title>EventSnap | Home</title>
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/sidebar.css">
-    <script src="./scripts/main.js" type="module" defer></script>
+    <script src="./scripts/main.js" defer></script>
 </head>
 <body>
 
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
 
     <div class="sidebar__logo">
-        <img src="./img/main_page/cloud_logo.svg" alt="EventSnap">
+        <img class="sidebar__logo--collapsed" src="./img/main_page/cloud_logo.svg" alt="EventSnap">
+        <img class="sidebar__logo--expanded" src="./img/main_page/logo_expand.svg" alt="EventSnap">
     </div>
 
     <button class="sidebar__btn sidebar__btn--create">
         <img src="./img/main_page/btn_create1.svg" alt="Создать">
+        <span class="sidebar__label">Создать</span>
+        <svg class="sidebar__btn-plus sidebar__label" width="25" height="25" viewBox="0 0 25 25" fill="none">
+            <line x1="12.5" y1="2" x2="12.5" y2="23" stroke="white" stroke-width="3" stroke-linecap="round"/>
+            <line x1="2" y1="12.5" x2="23" y2="12.5" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        </svg>
     </button>
     <button class="sidebar__btn sidebar__btn--add">
         <img src="./img/main_page/btn_add1.svg" alt="Добавить">
+        <span class="sidebar__label">Добавить</span>
+        <svg class="sidebar__btn-plus sidebar__label" width="25" height="25" viewBox="0 0 25 25" fill="none">
+            <line x1="12.5" y1="2" x2="12.5" y2="23" stroke="white" stroke-width="3" stroke-linecap="round"/>
+            <line x1="2" y1="12.5" x2="23" y2="12.5" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        </svg>
     </button>
     <button class="sidebar__btn sidebar__btn--file">
-        <img src="./img/main_page/folderbtn.svg" alt="Файл">
+        <img src="./img/main_page/folderbtn.svg" alt="Мероприятия">
+        <span class="sidebar__label">Мероприятия</span>
     </button>
     <button class="sidebar__btn sidebar__btn--rubbish">
         <img src="./img/main_page/btn_rub1.svg" alt="Корзина">
+        <span class="sidebar__label">Корзина</span>
     </button>
-    <button class="sidebar__btn sidebar__btn--hide">
+    <button class="sidebar__btn sidebar__btn--hide" id="sidebarToggle">
         <img src="./img/main_page/btn_hide.svg" alt="Свернуть">
+        <span class="sidebar__label">Свернуть меню</span>
     </button>
 
 </aside>

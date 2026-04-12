@@ -6,8 +6,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition: width 0.25s ease;
 }
 
+/* ===== LOGO (collapsed) ===== */
 .sidebar__logo {
     width: 67px;
     height: 54px;
@@ -17,14 +19,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
-.sidebar__logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
+.sidebar__logo--expanded { display: none; }
+.sidebar__logo--collapsed { width: 100%; height: 100%; object-fit: contain; }
 
+/* ===== КНОПКИ (collapsed) ===== */
 .sidebar__btn {
     background: transparent;
     border: none;
@@ -33,46 +34,169 @@
     align-items: center;
     justify-content: center;
     padding: 0;
+    flex-shrink: 0;
 }
 
-.sidebar__btn img {
-    display: block;
-}
+.sidebar__btn img { display: block; }
 
-.sidebar__btn--create {
-    width: 52px;
-    height: 52px;
-    margin-top: 65px;
-}
-
-.sidebar__btn--add {
-    width: 52px;
-    height: 52px;
-    margin-top: 16px;
-}
+.sidebar__btn--create { width: 52px; height: 52px; margin-top: 65px; }
+.sidebar__btn--add    { width: 52px; height: 52px; margin-top: 16px; }
 
 .sidebar__btn--file {
-    width: 104px;
-    height: 52px;
-    padding: 8px 26px;
-    box-sizing: border-box;
+    width: 104px; height: 52px;
+    padding: 8px 26px; box-sizing: border-box;
     margin-top: 27px;
 }
-
-
 .sidebar__btn--rubbish {
-    width: 104px;
-    height: 52px;
-    padding: 8px 26px;
-    box-sizing: border-box;
+    width: 104px; height: 52px;
+    padding: 8px 26px; box-sizing: border-box;
     margin-top: auto;
 }
-
 .sidebar__btn--hide {
-    width: 104px;
-    height: 52px;
-    padding: 8px 26px;
-    box-sizing: border-box;
-    margin-top: 0;
+    width: 104px; height: 52px;
+    padding: 8px 26px; box-sizing: border-box;
     margin-bottom: 54px;
+}
+
+/* Скрыто в collapsed */
+.sidebar__label    { display: none; }
+.sidebar__btn-plus { display: none; }
+
+/* ===== EXPANDED STATE ===== */
+.sidebar--expanded {
+    width: 313px;
+    align-items: flex-start;
+}
+
+/* Logo */
+.sidebar--expanded .sidebar__logo {
+    width: 266px; height: 63px;
+    padding: 0; margin-left: 24px;
+}
+.sidebar--expanded .sidebar__logo--collapsed { display: none; }
+.sidebar--expanded .sidebar__logo--expanded {
+    display: block; width: 100%; height: 100%; object-fit: contain;
+}
+
+/* Показываем метки */
+.sidebar--expanded .sidebar__label { display: inline; }
+.sidebar--expanded .sidebar__btn-plus { display: block; flex-shrink: 0; }
+
+/* Кнопка Создать */
+.sidebar--expanded .sidebar__btn--create {
+    width: 265px;
+    height: 52px;
+    border-radius: 15px;
+    padding: 16px 23px;
+    box-sizing: border-box;
+    justify-content: space-between;
+    margin-left: 24px;
+    margin-top: 65px;
+    background: linear-gradient(88.98deg, #6F02FF 43.24%, #9442FF 99.13%);
+}
+
+.sidebar--expanded .sidebar__btn--create > img { display: none; }
+
+.sidebar--expanded .sidebar__btn--create .sidebar__label {
+    color: #fff;
+    font-size: 17.8px;
+    font-weight: 700;
+    line-height: 20px;
+    font-family: "Wix Madefor Display", sans-serif;
+    white-space: nowrap;
+}
+
+/* Кнопка Добавить */
+.sidebar--expanded .sidebar__btn--add {
+    width: 265px;
+    height: 52px;
+    border-radius: 15px;
+    padding: 16px 23px;
+    box-sizing: border-box;
+    justify-content: space-between;
+    margin-left: 24px;
+    margin-top: 16px;
+    background: linear-gradient(90deg, hsla(151, 68%, 60%, 1) 0%, hsla(151, 87%, 68%, 1) 100%);
+}
+
+.sidebar--expanded .sidebar__btn--add > img { display: none; }
+
+.sidebar--expanded .sidebar__btn--add .sidebar__label {
+    color: #fff;
+    font-size: 17.8px;
+    font-weight: 700;
+    line-height: 20px;
+    font-family: "Wix Madefor Display", sans-serif;
+    white-space: nowrap;
+}
+
+/* Кнопка Мероприятия */
+.sidebar--expanded .sidebar__btn--file {
+    width: 313px;
+    height: 52px;
+    padding: 16px 24px;
+    box-sizing: border-box;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-left: 0;
+    background: hsla(0, 0%, 100%, 1);
+}
+
+.sidebar--expanded .sidebar__btn--file .sidebar__label {
+    font-size: 14px;
+    font-weight: 500;
+    font-family: "Wix Madefor Display", sans-serif;
+    color: #1a1d2e;
+    white-space: nowrap;
+}
+
+/* Текст в кнопке Мероприятия */
+.sidebar--expanded .sidebar__btn--file .sidebar__label {
+    font-size: 14px;
+    font-weight: 500;
+    font-family: "Wix Madefor Display", sans-serif;
+    color: #9ea3b0;
+    white-space: nowrap;
+}
+
+/* Корзина — такая же как Мероприятия */
+.sidebar--expanded .sidebar__btn--rubbish {
+    width: 313px;
+    height: 52px;
+    padding: 16px 24px;
+    box-sizing: border-box;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-top: auto;
+    background: hsla(0, 0%, 100%, 1);
+}
+
+.sidebar--expanded .sidebar__btn--rubbish .sidebar__label {
+    display: inline;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: "Wix Madefor Display", sans-serif;
+    color: #9ea3b0;
+    white-space: nowrap;
+}
+
+/* Свернуть меню */
+.sidebar--expanded .sidebar__btn--hide {
+    width: 313px;
+    height: 52px;
+    padding: 16px 24px;
+    box-sizing: border-box;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 54px;
+    background: hsla(0, 0%, 100%, 1);
+}
+
+.sidebar--expanded .sidebar__btn--hide .sidebar__label {
+    display: inline;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: "Wix Madefor Display", sans-serif;
+    color: #9ea3b0;
+    white-space: nowrap;
 }
