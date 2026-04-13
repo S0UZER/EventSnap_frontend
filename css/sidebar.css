@@ -200,3 +200,39 @@
     color: #9ea3b0;
     white-space: nowrap;
 }
+
+.sidebar__btn {
+    transition: all 0.2s ease;
+}
+
+.sidebar__btn:hover {
+    background: rgba(111, 2, 255, 0.08);
+    transform: translateX(2px);
+}
+
+.sidebar--expanded .sidebar__btn--create:hover,
+.sidebar--expanded .sidebar__btn--add:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 6px 16px rgba(111, 2, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.sidebar--expanded .sidebar__btn--file:hover,
+.sidebar--expanded .sidebar__btn--rubbish:hover,
+.sidebar--expanded .sidebar__btn--hide:hover {
+    background: rgba(111, 2, 255, 0.06);
+}
+
+.sidebar--expanded .sidebar__btn--file:hover .sidebar__label,
+.sidebar--expanded .sidebar__btn--rubbish:hover .sidebar__label,
+.sidebar--expanded .sidebar__btn--hide:hover .sidebar__label {
+    color: #6F02FF;
+}
+
+.sidebar__btn img {
+    transition: filter 0.2s ease;
+}
+
+.sidebar__btn:hover img {
+    filter: brightness(0) saturate(100%) invert(25%) sepia(96%) saturate(747%) hue-rotate(248deg) brightness(95%) contrast(101%);
+}

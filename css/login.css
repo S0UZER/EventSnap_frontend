@@ -1,0 +1,161 @@
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Затемнение */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Карточка */
+.modal__content {
+    width: 360px;
+    padding: 32px 24px;
+    border-radius: 20px;
+    background: #f3f4f6;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    position: relative;
+    animation: fadeIn 0.25s ease;
+}
+
+/* Назад */
+.modal__back {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    border: none;
+    background: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Заголовок */
+.modal__title {
+    text-align: center;
+    margin-bottom: 28px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Форма */
+.modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Инпуты */
+.modal__form input {
+    border: none;
+    border-bottom: 1px solid #cfd3d8;
+    background: transparent;
+    padding: 10px 4px;
+    outline: none;
+    font-size: 14px;
+}
+
+/* Кнопка регистрации */
+.modal__submit {
+    margin-top: 10px;
+    height: 52px;
+    border-radius: 14px;
+    background: #9aa0a6;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal__submit:hover {
+    background: #7f858c;
+}
+
+/* Разделитель */
+.modal__divider {
+    height: 1px;
+    background: #d1d5db;
+    margin: 28px 0;
+}
+
+/* Кнопка Яндекса */
+.yandex-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* центрируем всё */
+    gap: 12px;
+
+    height: 56px;
+    width: 100%;
+
+    border-radius: 28px;
+    background: #000;
+    border: none;
+
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.yandex-btn:hover {
+    background: #1a1a1a;
+    transform: translateY(-1px);
+}
+
+/* Красный кружок */
+.yandex-btn__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #ff3b30;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #fff;
+    font-weight: 800;
+    font-size: 18px;
+}
+
+/* Текст */
+.yandex-btn__text {
+    color: #fff;
+    font-size: 17px;
+    font-weight: 500;
+}
+
+/* Анимация */
+@keyframes fadeIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.yandex-btn__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #fff; /* фон как у оригинала */
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* сама иконка */
+.yandex-btn__icon img {
+    width: 20px;
+    height: 20px;
+}
