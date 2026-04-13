@@ -8,7 +8,9 @@ body {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.2);
-    display: flex;
+
+    display: none; /* 🔴 вместо flex */
+
     align-items: center;
     justify-content: center;
 }
@@ -159,3 +161,14 @@ body {
     width: 20px;
     height: 20px;
 }
+
+/* скрыта по умолчанию */
+.modal {
+    display: none;
+}
+
+/* показывается при открытии */
+.modal.active {
+    display: flex;
+}
+
