@@ -1,0 +1,101 @@
+/* Обёртка — поверх всего */
+#createModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+#createModal.active {
+    display: flex;
+}
+
+/* Карточка модалки — Figma: 298×309, gap 64 */
+.create-modal {
+    width: 298px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px 24px 28px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    box-shadow: 0 8px 40px rgba(111, 2, 255, 0.12);
+}
+
+/* Шапка: стрелка + заголовок */
+.create-modal__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.create-modal__back {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: #6F02FF;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.create-modal__title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1d2e;
+    font-family: "Wix Madefor Display", sans-serif;
+    margin: 0;
+}
+
+/* Форма */
+.create-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Поля с подчёркиванием */
+.create-modal__input {
+    border: none;
+    border-bottom: 1.5px solid #c5b8e8;
+    outline: none;
+    padding: 6px 0;
+    font-size: 14px;
+    font-family: "Wix Madefor Display", sans-serif;
+    color: #1a1d2e;
+    background: transparent;
+    width: 100%;
+}
+
+.create-modal__input::placeholder {
+    color: #b0b3bf;
+}
+
+.create-modal__input:focus {
+    border-bottom-color: #6F02FF;
+}
+
+/* Кнопка Создать */
+.create-modal__submit {
+    margin-top: 12px;
+    width: 100%;
+    height: 52px;
+    border-radius: 15px;
+    border: none;
+    background: #9ea3b0;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: "Wix Madefor Display", sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.create-modal__submit:hover {
+    background: #6F02FF;
+}

@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/sidebar.css">
     <link rel="stylesheet" href="./css/login.css">
+    <link rel="stylesheet" href="./css/create_event.css">
+    <link rel="stylesheet" href="./css/events.css">
     <script src="./scripts/main.js" defer></script>
 </head>
 <body>
@@ -19,7 +21,7 @@
         <img class="sidebar__logo--expanded" src="./img/main_page/logo_expand.svg" alt="EventSnap">
     </div>
 
-    <button class="sidebar__btn sidebar__btn--create">
+    <button class="sidebar__btn sidebar__btn--create" id="openCreateModal">
         <img src="./img/main_page/btn_create1.svg" alt="Создать">
         <span class="sidebar__label">Создать</span>
         <svg class="sidebar__btn-plus sidebar__label" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -55,7 +57,26 @@
         </button>
     </div>
 
-    <!-- МОДАЛКА -->
+    <!-- МОДАЛКА СОЗДАТЬ МЕРОПРИЯТИЕ -->
+    <div class="modal" id="createModal">
+        <div class="modal__content create-modal">
+
+            <div class="create-modal__header">
+                <button class="create-modal__back" id="closeCreateModal">&#8592;</button>
+                <h2 class="create-modal__title">Создать мероприятие</h2>
+            </div>
+
+            <form class="create-modal__form">
+                <input class="create-modal__input" type="text" placeholder="Введите название">
+                <input class="create-modal__input" type="text" placeholder="Введите место проведения">
+                <input class="create-modal__input" type="date" placeholder="Введите дату">
+                <button type="submit" class="create-modal__submit">Создать</button>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- МОДАЛКА РЕГИСТРАЦИИ -->
     <div class="modal" id="modal">
         <div class="modal__content">
 
@@ -86,6 +107,29 @@
     </div>
 
 </aside>
+
+<!-- ОСНОВНОЙ КОНТЕНТ -->
+<main class="main-content">
+
+    <!-- СПИСОК МЕРОПРИЯТИЙ -->
+    <div class="view" id="viewList">
+        <header class="main-header">
+            <h1 class="main-header__title">Мероприятия</h1>
+        </header>
+        <div class="events-grid" id="eventsGrid"></div>
+    </div>
+
+    <!-- СТРАНИЦА МЕРОПРИЯТИЯ -->
+    <div class="view view--hidden" id="viewEvent">
+        <header class="main-header main-header--event">
+            <button class="back-btn" id="backToList">&#8592;</button>
+            <h1 class="main-header__title" id="eventTitle"></h1>
+        </header>
+        <input type="file" id="photoInput" accept=".jpg,.jpeg,.png" multiple hidden>
+        <div class="photos-grid" id="photosGrid"></div>
+    </div>
+
+</main>
 
 </body>
 </html>
