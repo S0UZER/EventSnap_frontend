@@ -143,6 +143,10 @@
 
                 <button type="submit" class="modal__submit">Зарегистрироваться</button>
             </form>
+            <p class="modal__switch">
+                Уже есть аккаунт?
+                <a href="#" id="switchToLogin">Войти</a>
+            </p>
 
             <div class="modal__divider"></div>
 
@@ -154,7 +158,34 @@
             </button>
         </div>
     </div>
+    <div class="modal" id="loginModal">
+        <div class="modal__content">
+            <button class="modal__back" id="closeLoginModal">&#8592;</button>
 
+            <h2 class="modal__title">Войти</h2>
+
+            <form class="modal__form" id="loginForm">
+                <input type="email" placeholder="Введите e-mail" required>
+                <input type="password" placeholder="Введите пароль" required>
+
+                <button type="submit" class="modal__submit">Войти</button>
+            </form>
+
+            <p class="modal__switch">
+                Нет аккаунта?
+                <a href="#" id="switchToRegister">Зарегистрироваться</a>
+            </p>
+
+            <div class="modal__divider"></div>
+
+            <button class="yandex-btn">
+                <span class="yandex-btn__icon">
+                    <img src="https://encrypted-tbn2.gstatic.com/faviconV2?url=https://yandex.ru&client=VFE&size=64&type=FAVICON&fallback_opts=TYPE,SIZE,URL&nfrp=2" alt="Яндекс">
+                </span>
+                <span class="yandex-btn__text">Войти с Яндекс ID</span>
+            </button>
+        </div>
+    </div>
 </aside>
 
 <main class="main-content">

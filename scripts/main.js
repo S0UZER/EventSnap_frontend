@@ -847,3 +847,51 @@ if (modal) {
 
 setSidebarButtonLabels();
 renderEvents();
+
+// ===== Модалка входа =====
+const loginModal = document.getElementById('loginModal');
+const openLoginBtn = document.querySelector('.auth__btn--login');
+const closeLoginModalBtn = document.getElementById('closeLoginModal');
+const switchToRegisterLink = document.getElementById('switchToRegister');
+const switchToLoginLink = document.getElementById('switchToLogin');
+
+// Открыть модалку входа
+if (openLoginBtn) {
+    openLoginBtn.addEventListener('click', () => {
+        loginModal.classList.add('active');
+    });
+}
+
+// Закрыть модалку входа по стрелке назад
+if (closeLoginModalBtn) {
+    closeLoginModalBtn.addEventListener('click', () => {
+        loginModal.classList.remove('active');
+    });
+}
+
+// Закрыть модалку входа по клику на затемнение
+if (loginModal) {
+    loginModal.addEventListener('click', (e) => {
+        if (e.target === loginModal) {
+            loginModal.classList.remove('active');
+        }
+    });
+}
+
+// Переключение "Вход" -> "Регистрация"
+if (switchToRegisterLink) {
+    switchToRegisterLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginModal.classList.remove('active');
+        modal.classList.add('active');
+    });
+}
+
+// Переключение "Регистрация" -> "Вход"
+if (switchToLoginLink) {
+    switchToLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.classList.remove('active');
+        loginModal.classList.add('active');
+    });
+}
