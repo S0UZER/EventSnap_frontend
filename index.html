@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <title>EventSnap | Home</title>
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/sidebar.css">
@@ -52,15 +52,11 @@
 
     <div class="auth">
         <button class="auth__btn auth__btn--login">Войти</button>
-        <button id="openModal" class="auth__btn auth__btn--register">
-            Регистрация
-        </button>
+        <button id="openModal" class="auth__btn auth__btn--register">Регистрация</button>
     </div>
 
-    <!-- МОДАЛКА СОЗДАТЬ МЕРОПРИЯТИЕ -->
     <div class="modal" id="createModal">
         <div class="modal__content create-modal">
-
             <div class="create-modal__header">
                 <button class="create-modal__back" id="closeCreateModal">&#8592;</button>
                 <h2 class="create-modal__title">Создать мероприятие</h2>
@@ -68,19 +64,75 @@
 
             <form class="create-modal__form">
                 <input class="create-modal__input" type="text" placeholder="Введите название">
+                <textarea class="create-modal__input create-modal__textarea" placeholder="Введите описание"></textarea>
                 <input class="create-modal__input" type="text" placeholder="Введите место проведения">
-                <input class="create-modal__input" type="date" placeholder="Введите дату">
+                <input class="create-modal__input" type="date">
+                <div class="create-cover">
+                    <p class="create-cover__label">Обложка мероприятия</p>
+                    <input type="file" id="createCoverInput" accept=".jpg,.jpeg,.png" hidden>
+                    <button type="button" class="create-cover__picker" id="selectCreateCoverBtn">
+                        <span class="create-cover__picker-icon">+</span>
+                        <span class="create-cover__picker-text">Добавить фото для обложки</span>
+                    </button>
+                    <div class="create-cover__preview create-cover__preview--hidden" id="createCoverPreviewWrap">
+                        <img id="createCoverPreview" src="" alt="Предпросмотр обложки">
+                    </div>
+                    <div class="create-cover__file create-cover__file--hidden" id="createCoverFileName"></div>
+                </div>
                 <button type="submit" class="create-modal__submit">Создать</button>
             </form>
-
         </div>
     </div>
 
-    <!-- МОДАЛКА РЕГИСТРАЦИИ -->
+    <div class="modal" id="addPhotoModal">
+        <div class="modal__content upload-modal">
+            <div class="upload-modal__header">
+                <button class="upload-modal__back" id="closeAddPhotoModal">&#8592;</button>
+                <h2 class="upload-modal__title">Добавить фото</h2>
+            </div>
+
+            <form class="upload-modal__form" id="addPhotoForm">
+                <p class="upload-modal__hint" id="addPhotoHint">
+                    Выберите изображение, чтобы добавить его в текущее мероприятие
+                </p>
+
+                <input type="file" id="addPhotoInput" accept=".jpg,.jpeg,.png" multiple hidden>
+
+                <button type="button" class="upload-modal__dropzone" id="selectPhotoBtn">
+                    <span class="upload-modal__dropzone-icon">+</span>
+                    <span class="upload-modal__dropzone-text">Нажмите, чтобы выбрать фото</span>
+                    <span class="upload-modal__dropzone-subtext">Поддерживаются JPG и PNG</span>
+                </button>
+
+                <div class="upload-modal__preview upload-modal__preview--hidden" id="photoPreviewWrap">
+                    <img id="photoPreview" src="" alt="Предпросмотр фото">
+                </div>
+
+                <div class="upload-modal__file upload-modal__file--hidden" id="selectedPhotoName"></div>
+
+                <button type="submit" class="upload-modal__submit" id="savePhotoBtn">Добавить на экран</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="joinModal">
+        <div class="modal__content create-modal">
+            <div class="create-modal__header">
+                <button class="create-modal__back" id="closeJoinModal">&#8592;</button>
+                <h2 class="create-modal__title">Добавить мероприятие</h2>
+            </div>
+
+            <form class="create-modal__form" id="joinEventForm">
+                <input class="create-modal__input" type="text" id="joinEventCode" placeholder="Введите код или ссылку мероприятия">
+                <input class="create-modal__input" type="text" id="joinEventName" placeholder="Название в вашем списке">
+                <button type="submit" class="create-modal__submit">Добавить в список</button>
+            </form>
+        </div>
+    </div>
+
     <div class="modal" id="modal">
         <div class="modal__content">
-
-            <button class="modal__back" id="closeModal">←</button>
+            <button class="modal__back" id="closeModal">&#8592;</button>
 
             <h2 class="modal__title">Зарегистрироваться</h2>
 
@@ -89,46 +141,172 @@
                 <input type="password" placeholder="Введите пароль">
                 <input type="password" placeholder="Повторно введите пароль">
 
-                <button type="submit" class="modal__submit">
-                    Зарегистрироваться
-                </button>
+                <button type="submit" class="modal__submit">Зарегистрироваться</button>
             </form>
 
             <div class="modal__divider"></div>
 
             <button class="yandex-btn">
                 <span class="yandex-btn__icon">
-                    <img src="https://encrypted-tbn2.gstatic.com/faviconV2?url=https://yandex.ru&client=VFE&size=64&type=FAVICON&fallback_opts=TYPE,SIZE,URL&nfrp=2">
+                    <img src="https://encrypted-tbn2.gstatic.com/faviconV2?url=https://yandex.ru&client=VFE&size=64&type=FAVICON&fallback_opts=TYPE,SIZE,URL&nfrp=2" alt="Яндекс">
                 </span>
                 <span class="yandex-btn__text">Войти с Яндекс ID</span>
             </button>
-
         </div>
     </div>
 
 </aside>
 
-<!-- ОСНОВНОЙ КОНТЕНТ -->
 <main class="main-content">
-
-    <!-- СПИСОК МЕРОПРИЯТИЙ -->
     <div class="view" id="viewList">
         <header class="main-header">
             <h1 class="main-header__title">Мероприятия</h1>
         </header>
+        <div class="events-empty" id="eventsEmpty">
+            <img class="events-empty__image" src="./img/main_page/empty-photo-icon.svg" alt="Нет мероприятий">
+            <h2 class="events-empty__title">Нет мероприятий</h2>
+            <p class="events-empty__text">Добавьте или создайте мероприятие</p>
+        </div>
         <div class="events-grid" id="eventsGrid"></div>
     </div>
 
-    <!-- СТРАНИЦА МЕРОПРИЯТИЯ -->
     <div class="view view--hidden" id="viewEvent">
         <header class="main-header main-header--event">
             <button class="back-btn" id="backToList">&#8592;</button>
             <h1 class="main-header__title" id="eventTitle"></h1>
         </header>
-        <input type="file" id="photoInput" accept=".jpg,.jpeg,.png" multiple hidden>
-        <div class="photos-grid" id="photosGrid"></div>
+
+        <section class="event-shell">
+            <div class="event-hero">
+                <div class="event-hero__cover">
+                    <img id="eventCoverImage" src="./img/main_page/empty-events.png" alt="Обложка мероприятия">
+                </div>
+                <div class="event-hero__content">
+                    <div class="event-hero__meta">
+                        <span class="event-badge" id="eventDateBadge">Дата не указана</span>
+                        <span class="event-badge event-badge--soft" id="eventPlaceBadge">Место не указано</span>
+                    </div>
+                    <p class="event-hero__description" id="eventDescription">Описание мероприятия пока не заполнено.</p>
+                    <div class="event-switch">
+                        <div>
+                            <h3 class="event-switch__title">Модерация галереи</h3>
+                            <p class="event-switch__text" id="moderationStatusText">Все новые фото сразу попадают в галерею</p>
+                        </div>
+                        <button class="moderation-toggle" id="moderationToggle" type="button" aria-pressed="false">
+                            <span class="moderation-toggle__track"></span>
+                            <span class="moderation-toggle__thumb"></span>
+                        </button>
+                    </div>
+                    <button class="event-delete-btn" id="deleteEventBtn" type="button">Удалить мероприятие</button>
+                </div>
+            </div>
+
+            <div class="event-dashboard">
+                <section class="event-panel event-panel--qr">
+                    <div class="event-panel__header">
+                        <div>
+                            <h2 class="event-panel__title">QR-код события</h2>
+                            <p class="event-panel__subtitle">Покажите код участнику, чтобы он быстро вошёл в мероприятие</p>
+                        </div>
+                    </div>
+                    <div class="qr-card">
+                        <div class="qr-card__image-wrap">
+                            <img class="qr-card__image" id="eventQrImage" src="" alt="QR-код события">
+                        </div>
+                        <div class="qr-card__meta">
+                            <p class="qr-card__label">Ссылка для входа</p>
+                            <p class="qr-card__value" id="eventQrValue">eventsnap://event/demo</p>
+                        </div>
+                        <button class="qr-card__action" id="openParticipantViewBtn" type="button">Открыть как участник</button>
+                    </div>
+                </section>
+
+                <section class="event-panel">
+                    <div class="event-panel__header">
+                        <div>
+                            <h2 class="event-panel__title">Участники</h2>
+                            <p class="event-panel__subtitle">Список людей, присоединившихся к событию</p>
+                        </div>
+                        <span class="event-panel__count" id="participantsCount">0</span>
+                    </div>
+                    <div class="participants-list" id="participantsList"></div>
+                </section>
+
+                <section class="event-panel">
+                    <div class="event-panel__header">
+                        <div>
+                            <h2 class="event-panel__title">Галерея</h2>
+                            <p class="event-panel__subtitle">Одобренные фотографии мероприятия</p>
+                        </div>
+                        <div class="event-panel__header-side">
+                            <button class="event-panel__action" id="adminAddPhotoBtn" type="button">Добавить фото</button>
+                            <span class="event-panel__count" id="galleryCount">0</span>
+                        </div>
+                    </div>
+                    <div class="photos-grid" id="photosGrid"></div>
+                    <div class="event-empty-state event-empty-state--hidden" id="galleryEmpty">
+                        <p class="event-empty-state__title">В галерее пока нет фото</p>
+                        <p class="event-empty-state__text">Нажмите «Добавить», чтобы загрузить первую фотографию</p>
+                    </div>
+                </section>
+
+                <section class="event-panel" id="moderationPanel">
+                    <div class="event-panel__header">
+                        <div>
+                            <h2 class="event-panel__title">Модерация</h2>
+                            <p class="event-panel__subtitle">Очередь фото, которые ждут решения организатора</p>
+                        </div>
+                        <span class="event-panel__count" id="moderationCount">0</span>
+                    </div>
+                    <div class="moderation-list" id="moderationList"></div>
+                    <div class="event-empty-state event-empty-state--hidden" id="moderationEmpty">
+                        <p class="event-empty-state__title">Очередь модерации пуста</p>
+                        <p class="event-empty-state__text">Новые фотографии будут появляться здесь, если модерация включена</p>
+                    </div>
+                </section>
+            </div>
+        </section>
     </div>
 
+    <div class="view view--hidden" id="viewUserEvent">
+        <header class="main-header main-header--event">
+            <button class="back-btn" id="backToAdminView">&#8592;</button>
+            <h1 class="main-header__title" id="userEventTitle"></h1>
+        </header>
+
+        <section class="user-event-shell">
+            <div class="user-event-hero">
+                <div class="user-event-hero__cover">
+                    <img id="userEventCoverImage" src="./img/main_page/empty-events.png" alt="Обложка мероприятия для участника">
+                </div>
+                <div class="user-event-hero__content">
+                    <div class="user-event-hero__meta">
+                        <span class="event-badge" id="userEventDateBadge">Дата не указана</span>
+                        <span class="event-badge event-badge--soft" id="userEventPlaceBadge">Место не указано</span>
+                    </div>
+                    <p class="user-event-hero__description" id="userEventDescription">Описание мероприятия пока не заполнено.</p>
+                    <div class="user-event-hero__actions">
+                        <button class="user-event__add-btn" id="userAddPhotoBtn" type="button">Добавить фотографию</button>
+                    </div>
+                </div>
+            </div>
+
+            <section class="event-panel event-panel--user-gallery">
+                <div class="event-panel__header">
+                    <div>
+                        <h2 class="event-panel__title">Галерея участника</h2>
+                        <p class="event-panel__subtitle">Вы можете загружать фото и удалять только свои изображения</p>
+                    </div>
+                    <span class="event-panel__count" id="userGalleryCount">0</span>
+                </div>
+                <div class="photos-grid" id="userPhotosGrid"></div>
+                <div class="event-empty-state event-empty-state--hidden" id="userGalleryEmpty">
+                    <p class="event-empty-state__title">Пока нет доступных фотографий</p>
+                    <p class="event-empty-state__text">Загрузите снимок, чтобы он появился в галерее события</p>
+                </div>
+            </section>
+        </section>
+    </div>
 </main>
 
 </body>

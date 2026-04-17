@@ -1,4 +1,4 @@
-/* Обёртка — поверх всего */
+/* Create event modal */
 #createModal {
     display: none;
     position: fixed;
@@ -13,20 +13,18 @@
     display: flex;
 }
 
-/* Карточка модалки — Figma: 298×309, gap 64 */
 .create-modal {
-    width: 298px;
+    width: 360px;
     background: #fff;
-    border-radius: 20px;
+    border-radius: 24px;
     padding: 32px 24px 28px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 32px;
-    box-shadow: 0 8px 40px rgba(111, 2, 255, 0.12);
+    gap: 28px;
+    box-shadow: 0 18px 48px rgba(26, 29, 46, 0.18);
 }
 
-/* Шапка: стрелка + заголовок */
 .create-modal__header {
     display: flex;
     align-items: center;
@@ -38,38 +36,118 @@
     border: none;
     cursor: pointer;
     font-size: 20px;
-    color: #6F02FF;
+    color: #6f02ff;
     padding: 0;
     line-height: 1;
     flex-shrink: 0;
 }
 
 .create-modal__title {
-    font-size: 18px;
+    margin: 0;
+    font-size: 20px;
     font-weight: 700;
     color: #1a1d2e;
     font-family: "Wix Madefor Display", sans-serif;
-    margin: 0;
 }
 
-/* Форма */
 .create-modal__form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
 }
 
-/* Поля с подчёркиванием */
 .create-modal__input {
     border: none;
     border-bottom: 1.5px solid #c5b8e8;
     outline: none;
-    padding: 6px 0;
+    padding: 8px 0;
     font-size: 14px;
     font-family: "Wix Madefor Display", sans-serif;
     color: #1a1d2e;
     background: transparent;
     width: 100%;
+    resize: none;
+}
+
+.create-modal__textarea {
+    min-height: 72px;
+}
+
+.create-cover {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.create-cover__label {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1d2e;
+}
+
+.create-cover__picker {
+    min-height: 120px;
+    border: 1.5px dashed #c5b8e8;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(111, 2, 255, 0.04), rgba(148, 66, 255, 0.02));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 18px;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.create-cover__picker:hover {
+    border-color: #6f02ff;
+    transform: translateY(-1px);
+}
+
+.create-cover__picker-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #6f02ff;
+    color: #fff;
+    font-size: 26px;
+    line-height: 1;
+}
+
+.create-cover__picker-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1d2e;
+}
+
+.create-cover__preview {
+    width: 100%;
+    height: 180px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #f3f4f8;
+}
+
+.create-cover__preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.create-cover__file {
+    font-size: 13px;
+    color: #4b5563;
+}
+
+.create-cover__preview--hidden,
+.create-cover__file--hidden {
+    display: none;
 }
 
 .create-modal__input::placeholder {
@@ -77,12 +155,11 @@
 }
 
 .create-modal__input:focus {
-    border-bottom-color: #6F02FF;
+    border-bottom-color: #6f02ff;
 }
 
-/* Кнопка Создать */
 .create-modal__submit {
-    margin-top: 12px;
+    margin-top: 8px;
     width: 100%;
     height: 52px;
     border-radius: 15px;
@@ -93,9 +170,162 @@
     font-weight: 700;
     font-family: "Wix Madefor Display", sans-serif;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .create-modal__submit:hover {
-    background: #6F02FF;
+    background: #6f02ff;
+    transform: translateY(-1px);
+}
+
+/* Upload modal */
+.upload-modal {
+    width: 420px;
+    background: #fff;
+    border-radius: 24px;
+    padding: 28px 24px 24px;
+    box-sizing: border-box;
+    box-shadow: 0 18px 48px rgba(26, 29, 46, 0.18);
+}
+
+.upload-modal__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.upload-modal__back {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 22px;
+    color: #6f02ff;
+    padding: 0;
+    line-height: 1;
+}
+
+.upload-modal__title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1d2e;
+}
+
+.upload-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.upload-modal__hint {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #6b7280;
+}
+
+.upload-modal__hint--warning {
+    color: #b45309;
+}
+
+.upload-modal__dropzone {
+    min-height: 180px;
+    border: 1.5px dashed #c5b8e8;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(111, 2, 255, 0.06), rgba(148, 66, 255, 0.02));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 24px;
+    transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.upload-modal__dropzone:hover:not(:disabled) {
+    border-color: #6f02ff;
+    transform: translateY(-1px);
+    background: linear-gradient(180deg, rgba(111, 2, 255, 0.1), rgba(148, 66, 255, 0.04));
+}
+
+.upload-modal__dropzone:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+    border-color: #d6d8e3;
+    background: #f3f4f8;
+}
+
+.upload-modal__dropzone-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #6f02ff;
+    color: #fff;
+    font-size: 34px;
+    line-height: 1;
+}
+
+.upload-modal__dropzone-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1d2e;
+}
+
+.upload-modal__dropzone-subtext {
+    font-size: 13px;
+    color: #8b90a0;
+}
+
+.upload-modal__preview {
+    width: 100%;
+    height: 220px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #f3f4f8;
+}
+
+.upload-modal__preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.upload-modal__preview--hidden,
+.upload-modal__file--hidden {
+    display: none;
+}
+
+.upload-modal__file {
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.upload-modal__submit {
+    width: 100%;
+    height: 52px;
+    border: none;
+    border-radius: 15px;
+    background: linear-gradient(88.98deg, #6f02ff 43.24%, #9442ff 99.13%);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: "Wix Madefor Display", sans-serif;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.upload-modal__submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.upload-modal__submit:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }

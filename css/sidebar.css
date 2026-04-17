@@ -99,9 +99,9 @@
 
 .sidebar--expanded .sidebar__btn--create .sidebar__label {
     color: #fff;
-    font-size: 17.8px;
+    font-size: 16px;
     font-weight: 700;
-    line-height: 20px;
+    line-height: 18px;
     font-family: "Wix Madefor Display", sans-serif;
     white-space: nowrap;
 }
@@ -123,9 +123,9 @@
 
 .sidebar--expanded .sidebar__btn--add .sidebar__label {
     color: #fff;
-    font-size: 17.8px;
+    font-size: 16px;
     font-weight: 700;
-    line-height: 20px;
+    line-height: 18px;
     font-family: "Wix Madefor Display", sans-serif;
     white-space: nowrap;
 }
@@ -259,7 +259,7 @@
 /* контейнер справа сверху */
 .auth {
     position: absolute;
-    top: 20px;
+    top: 30px;
     right: 20px;
 
     display: flex;
