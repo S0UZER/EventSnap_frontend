@@ -10,8 +10,10 @@
     <link rel="stylesheet" href="./css/login.css">
     <link rel="stylesheet" href="./css/create_event.css">
     <link rel="stylesheet" href="./css/events.css">
+    <link rel="stylesheet" href="./css/lightbox.css">
     <script src="./scripts/config.js" defer></script>
     <script src="./scripts/auth.js" defer></script>
+    <script src="./scripts/storage.js" defer></script>
     <script src="./scripts/main.js" defer></script>
 </head>
 <body>
@@ -341,6 +343,13 @@
         </section>
     </div>
 </main>
+<div class="lightbox" id="lightbox">
+    <button class="lightbox__close" id="lightboxClose" type="button" aria-label="Закрыть">&times;</button>
+    <button class="lightbox__nav lightbox__nav--prev" id="lightboxPrev" type="button" aria-label="Предыдущее">&#8592;</button>
+    <img class="lightbox__image" id="lightboxImage" src="" alt="">
+    <button class="lightbox__nav lightbox__nav--next" id="lightboxNext" type="button" aria-label="Следующее">&#8594;</button>
+    <div class="lightbox__caption" id="lightboxCaption"></div>
+</div>
 
 </body>
 </html>

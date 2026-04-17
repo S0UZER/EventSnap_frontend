@@ -85,11 +85,11 @@ const participantPool = [
     { name: 'Илья Волков', role: 'Фотограф' },
 ];
 
-const events = [];
+const events = storage.loadEvents();
 let currentEventId = null;
 let selectedPhotoFiles = [];
 let selectedCreateCoverFile = null;
-let nextEventId = 1;
+let nextEventId = storage.loadNextId();
 let uploadContext = 'organizer';
 
 function getInitials(name) {
@@ -116,6 +116,15 @@ function formatEventDate(value) {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
+    });
+}
+
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
+        reader.readAsDataURL(file);
     });
 }
 
@@ -212,6 +221,11 @@ function setSidebarButtonLabels() {
     if (savePhotoBtn) {
         savePhotoBtn.textContent = 'Добавить фотографии';
     }
+}
+
+function persistEvents() {
+    storage.saveEvents(events);
+    storage.saveNextId(nextEventId);
 }
 
 function renderEvents() {
@@ -333,7 +347,7 @@ function createEventFromForm(inputs) {
         description,
         place,
         date,
-        cover: selectedCreateCoverFile ? URL.createObjectURL(selectedCreateCoverFile) : defaultCover,
+        cover: defaultCover,
         accessRole: 'organizer',
         moderationEnabled: false,
         qrValue: `eventsnap://event/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -385,11 +399,44 @@ function createPhotoCard(photo) {
     item.className = 'photo-item';
     item.innerHTML = `
         <img src="${photo.src}" alt="${photo.name}">
+        <div class="photo-item__actions">
+            <button class="photo-item__delete" type="button">Удалить</button>
+        </div>
         <div class="photo-item__footer">
             <span class="photo-item__name">${photo.name}</span>
             <span class="photo-item__status">Одобрено</span>
         </div>
     `;
+
+    // Клик по кнопке "Удалить"
+    const deleteButton = item.querySelector('.photo-item__delete');
+    if (deleteButton) {
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+
+            const currentEvent = getCurrentEvent();
+            if (!currentEvent) return;
+
+            if (!confirm('Удалить это фото?')) return;
+
+            currentEvent.photos = currentEvent.photos.filter((eventPhoto) => eventPhoto.id !== photo.id);
+            persistEvents();
+            renderCurrentEvent();
+            renderEvents();
+        });
+    }
+
+    // Клик по картинке — открыть lightbox
+    const img = item.querySelector('img');
+    if (img) {
+        img.addEventListener('click', () => {
+            const currentEvent = getCurrentEvent();
+            if (!currentEvent) return;
+            const index = currentEvent.photos.findIndex((p) => p.id === photo.id);
+            openLightbox(currentEvent.photos, index);
+        });
+    }
+
     return item;
 }
 
@@ -408,7 +455,8 @@ function createUserPhotoCard(photo) {
     const deleteButton = item.querySelector('.photo-item__delete');
 
     if (deleteButton) {
-        deleteButton.addEventListener('click', () => {
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation();
             const currentEvent = getCurrentEvent();
 
             if (!currentEvent) {
@@ -416,8 +464,18 @@ function createUserPhotoCard(photo) {
             }
 
             currentEvent.photos = currentEvent.photos.filter((eventPhoto) => eventPhoto.id !== photo.id);
+            persistEvents();
             renderCurrentEvent();
             renderUserEvent();
+        });
+    }
+    const img = item.querySelector('img');
+    if (img) {
+        img.addEventListener('click', () => {
+            const currentEvent = getCurrentEvent();
+            if (!currentEvent) return;
+            const index = currentEvent.photos.findIndex((p) => p.id === photo.id);
+            openLightbox(currentEvent.photos, index);
         });
     }
 
@@ -512,6 +570,7 @@ function renderModerationQueue(event) {
                 currentEvent.cover = photo.src;
             }
 
+            persistEvents();
             renderCurrentEvent();
             renderUserEvent();
             renderEvents();
@@ -531,6 +590,7 @@ function renderModerationQueue(event) {
                 currentEvent.lastModerationComment = comment;
             }
 
+            persistEvents();
             renderCurrentEvent();
         });
 
@@ -597,6 +657,7 @@ function deleteCurrentEvent() {
     }
 
     events.splice(index, 1);
+    persistEvents();
     currentEventId = null;
     viewEvent.classList.add('view--hidden');
     viewUserEvent.classList.add('view--hidden');
@@ -661,6 +722,7 @@ if (joinEventForm) {
 
         const joinedEvent = createJoinedEvent(joinEventCode.value, joinEventName.value);
         events.push(joinedEvent);
+        persistEvents();
         renderEvents();
         joinEventForm.reset();
         joinModal.classList.remove('active');
@@ -681,11 +743,23 @@ if (createCoverInput) {
 }
 
 if (createForm) {
-    createForm.addEventListener('submit', (event) => {
+    createForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const inputs = createForm.querySelectorAll('.create-modal__input');
         const newEvent = createEventFromForm(inputs);
+
+        // Конвертируем обложку в base64 если выбрана
+        if (selectedCreateCoverFile) {
+            try {
+                newEvent.cover = await fileToBase64(selectedCreateCoverFile);
+            } catch (err) {
+                console.error('Ошибка чтения обложки:', err);
+                newEvent.cover = defaultCover;
+            }
+        }
+
         events.push(newEvent);
+        persistEvents();
         renderEvents();
         resetCreateModal();
         createModal.classList.remove('active');
@@ -765,7 +839,7 @@ if (addPhotoInput) {
 }
 
 if (addPhotoForm) {
-    addPhotoForm.addEventListener('submit', (event) => {
+    addPhotoForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
         const currentEvent = getCurrentEvent();
@@ -775,28 +849,47 @@ if (addPhotoForm) {
             return;
         }
 
-        const newPhotos = selectedPhotoFiles.map((file, index) => ({
-            id: Date.now() + index,
-            src: URL.createObjectURL(file),
-            name: file.name,
-            author: uploadContext === 'participant' ? participantName : organizerName,
-            ownerType: uploadContext === 'participant' ? 'participant' : 'organizer',
-        }));
+        // Блокируем кнопку на время загрузки
+        savePhotoBtn.disabled = true;
+        savePhotoBtn.textContent = 'Загрузка...';
 
-        if (currentEvent.moderationEnabled) {
-            currentEvent.pendingPhotos.unshift(...newPhotos);
-        } else {
-            currentEvent.photos.unshift(...newPhotos);
+        try {
+            // Читаем все файлы параллельно в base64
+            const base64Results = await Promise.all(
+                selectedPhotoFiles.map((file) => fileToBase64(file))
+            );
 
-            if (uploadContext === 'organizer' && newPhotos[0]) {
-                currentEvent.cover = newPhotos[0].src;
+            const newPhotos = selectedPhotoFiles.map((file, index) => ({
+                id: Date.now() + index,
+                src: base64Results[index],
+                name: file.name,
+                author: uploadContext === 'participant' ? participantName : organizerName,
+                ownerType: uploadContext === 'participant' ? 'participant' : 'organizer',
+            }));
+
+            if (currentEvent.moderationEnabled) {
+                currentEvent.pendingPhotos.unshift(...newPhotos);
+            } else {
+                currentEvent.photos.unshift(...newPhotos);
+
+                if (uploadContext === 'organizer' && newPhotos[0]) {
+                    currentEvent.cover = newPhotos[0].src;
+                }
             }
-        }
 
-        renderCurrentEvent();
-        renderUserEvent();
-        renderEvents();
-        closeUploadModal();
+            persistEvents();
+            renderCurrentEvent();
+            renderUserEvent();
+            renderEvents();
+            closeUploadModal();
+        } catch (err) {
+            console.error('Ошибка загрузки фото:', err);
+            alert('Не удалось загрузить фото. Попробуйте ещё раз.');
+        } finally {
+            // Возвращаем кнопку в исходное состояние
+            savePhotoBtn.disabled = false;
+            savePhotoBtn.textContent = 'Добавить фотографии';
+        }
     });
 }
 
@@ -809,6 +902,7 @@ if (moderationToggle) {
         }
 
         currentEvent.moderationEnabled = !currentEvent.moderationEnabled;
+        persistEvents();
         renderCurrentEvent();
     });
 }
@@ -888,3 +982,83 @@ if (switchToLoginLink) {
         loginModal.classList.add('active');
     });
 }
+
+// ===== Lightbox (просмотр фото в полный экран) =====
+const lightbox = document.getElementById('lightbox');
+const lightboxImage = document.getElementById('lightboxImage');
+const lightboxCaption = document.getElementById('lightboxCaption');
+const lightboxClose = document.getElementById('lightboxClose');
+const lightboxPrev = document.getElementById('lightboxPrev');
+const lightboxNext = document.getElementById('lightboxNext');
+
+let lightboxPhotos = [];
+let lightboxIndex = 0;
+
+function openLightbox(photos, startIndex) {
+    if (!photos || photos.length === 0) return;
+
+    lightboxPhotos = photos;
+    lightboxIndex = startIndex;
+
+    // Если фото только одно — скрываем стрелки
+    lightbox.classList.toggle('lightbox--single', photos.length <= 1);
+    lightbox.classList.add('active');
+    showLightboxPhoto();
+}
+
+function closeLightbox() {
+    lightbox.classList.remove('active');
+    lightboxImage.src = '';
+    lightboxPhotos = [];
+}
+
+function showLightboxPhoto() {
+    const photo = lightboxPhotos[lightboxIndex];
+    if (!photo) return;
+
+    lightboxImage.src = photo.src;
+    lightboxImage.alt = photo.name;
+    lightboxCaption.textContent = `${photo.name} — ${lightboxIndex + 1} из ${lightboxPhotos.length}`;
+}
+
+function lightboxGoPrev() {
+    if (lightboxPhotos.length <= 1) return;
+    lightboxIndex = (lightboxIndex - 1 + lightboxPhotos.length) % lightboxPhotos.length;
+    showLightboxPhoto();
+}
+
+function lightboxGoNext() {
+    if (lightboxPhotos.length <= 1) return;
+    lightboxIndex = (lightboxIndex + 1) % lightboxPhotos.length;
+    showLightboxPhoto();
+}
+
+if (lightboxClose) {
+    lightboxClose.addEventListener('click', closeLightbox);
+}
+
+if (lightboxPrev) {
+    lightboxPrev.addEventListener('click', lightboxGoPrev);
+}
+
+if (lightboxNext) {
+    lightboxNext.addEventListener('click', lightboxGoNext);
+}
+
+// Клик по фону закрывает
+if (lightbox) {
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) {
+            closeLightbox();
+        }
+    });
+}
+
+// Клавиатура: Esc, стрелки
+document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('active')) return;
+
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lightboxGoPrev();
+    if (e.key === 'ArrowRight') lightboxGoNext();
+});
