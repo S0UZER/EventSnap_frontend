@@ -329,3 +329,12 @@
 .auth__btn--register::before {
     background: rgba(0, 0, 0, 0.08);
 }
+
+.auth__user {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1d2e;
+}

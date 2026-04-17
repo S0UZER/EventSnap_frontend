@@ -850,17 +850,10 @@ renderEvents();
 
 // ===== Модалка входа =====
 const loginModal = document.getElementById('loginModal');
-const openLoginBtn = document.querySelector('.auth__btn--login');
 const closeLoginModalBtn = document.getElementById('closeLoginModal');
 const switchToRegisterLink = document.getElementById('switchToRegister');
 const switchToLoginLink = document.getElementById('switchToLogin');
 
-// Открыть модалку входа
-if (openLoginBtn) {
-    openLoginBtn.addEventListener('click', () => {
-        loginModal.classList.add('active');
-    });
-}
 
 // Закрыть модалку входа по стрелке назад
 if (closeLoginModalBtn) {
