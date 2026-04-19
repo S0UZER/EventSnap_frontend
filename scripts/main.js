@@ -129,6 +129,22 @@ function fileToBase64(file) {
     });
 }
 
+function base64ToFile(base64, filename = 'photo.jpg') {
+    // Разбираем data URL: "data:image/jpeg;base64,...."
+    const [header, data] = base64.split(',');
+    const mimeMatch = header.match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+    // Декодируем base64 в байты
+    const byteString = atob(data);
+    const bytes = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i += 1) {
+        bytes[i] = byteString.charCodeAt(i);
+    }
+
+    return new File([bytes], filename, { type: mime });
+}
+
 function hashString(value) {
     let hash = 0;
 
@@ -269,16 +285,28 @@ function resetCreateModal() {
     createCoverFileName.classList.add('create-cover__file--hidden');
 }
 
-function handleCreateCoverSelection(file) {
+async function handleCreateCoverSelection(file) {
     if (!file || !file.type.match(/image\/(jpeg|png)/)) {
         return;
     }
 
-    selectedCreateCoverFile = file;
-    createCoverPreview.src = URL.createObjectURL(file);
-    createCoverPreviewWrap.classList.remove('create-cover__preview--hidden');
-    createCoverFileName.textContent = file.name;
-    createCoverFileName.classList.remove('create-cover__file--hidden');
+    try {
+        // Открываем редактор перед сохранением
+        const editedFile = await openImageEditor(file);
+
+        selectedCreateCoverFile = editedFile;
+        createCoverPreview.src = URL.createObjectURL(editedFile);
+        createCoverPreviewWrap.classList.remove('create-cover__preview--hidden');
+        createCoverFileName.textContent = editedFile.name;
+        createCoverFileName.classList.remove('create-cover__file--hidden');
+    } catch (err) {
+        if (err !== 'cancelled') {
+            console.error('Ошибка редактирования:', err);
+            alert('Не удалось обработать изображение');
+        }
+        // Если отменили — сбрасываем input, чтобы можно было выбрать тот же файл заново
+        createCoverInput.value = '';
+    }
 }
 
 function resetAddPhotoModal() {
@@ -315,19 +343,41 @@ function closeUploadModal() {
     resetAddPhotoModal();
 }
 
-function handleSelectedPhotos(files) {
+async function handleSelectedPhotos(files) {
     const validFiles = Array.from(files ?? []).filter((file) => file.type.match(/image\/(jpeg|png)/));
 
     if (validFiles.length === 0) {
         return;
     }
 
-    selectedPhotoFiles = validFiles;
-    photoPreview.src = URL.createObjectURL(validFiles[0]);
+    // Прогоняем каждое фото через редактор по очереди
+    const editedFiles = [];
+    for (const file of validFiles) {
+        try {
+            const edited = await openImageEditor(file);
+            editedFiles.push(edited);
+        } catch (err) {
+            if (err === 'cancelled') {
+                // Пользователь отменил это конкретное фото — просто пропускаем
+                continue;
+            }
+            console.error('Ошибка редактирования:', err);
+            alert('Не удалось обработать одно из изображений');
+        }
+    }
+
+    if (editedFiles.length === 0) {
+        // Все отменили — чистим input
+        addPhotoInput.value = '';
+        return;
+    }
+
+    selectedPhotoFiles = editedFiles;
+    photoPreview.src = URL.createObjectURL(editedFiles[0]);
     photoPreviewWrap.classList.remove('upload-modal__preview--hidden');
-    selectedPhotoName.textContent = validFiles.length === 1
-        ? validFiles[0].name
-        : `${validFiles.length} файлов выбрано. Первый: ${validFiles[0].name}`;
+    selectedPhotoName.textContent = editedFiles.length === 1
+        ? editedFiles[0].name
+        : `${editedFiles.length} файлов выбрано. Первый: ${editedFiles[0].name}`;
     selectedPhotoName.classList.remove('upload-modal__file--hidden');
     updateAddPhotoModalState();
 }
@@ -395,12 +445,46 @@ function createParticipantMarkup(participant) {
     `;
 }
 
+async function editExistingPhoto(photo) {
+    try {
+        // Превращаем base64 обратно в File
+        const file = base64ToFile(photo.src, photo.name || 'photo.jpg');
+
+        // Открываем редактор
+        const editedFile = await openImageEditor(file);
+
+        // Новый base64 из отредактированного файла
+        const newBase64 = await fileToBase64(editedFile);
+
+        // Перезаписываем src у фото в массиве (id сохраняем)
+        const currentEvent = getCurrentEvent();
+        if (!currentEvent) return;
+
+        const target = currentEvent.photos.find((p) => p.id === photo.id);
+        if (target) {
+            target.src = newBase64;
+            target.name = editedFile.name;
+        }
+
+        persistEvents();
+        renderCurrentEvent();
+        renderUserEvent();
+        renderEvents();
+    } catch (err) {
+        if (err !== 'cancelled') {
+            console.error('Ошибка редактирования существующего фото:', err);
+            alert('Не удалось отредактировать фото');
+        }
+    }
+}
+
 function createPhotoCard(photo) {
     const item = document.createElement('article');
     item.className = 'photo-item';
     item.innerHTML = `
         <img src="${photo.src}" alt="${photo.name}">
         <div class="photo-item__actions">
+            <button class="photo-item__edit" type="button">Редактировать</button>
             <button class="photo-item__delete" type="button">Удалить</button>
         </div>
         <div class="photo-item__footer">
@@ -409,7 +493,16 @@ function createPhotoCard(photo) {
         </div>
     `;
 
-    // Клик по кнопке "Удалить"
+    // Клик по "Редактировать"
+    const editButton = item.querySelector('.photo-item__edit');
+    if (editButton) {
+        editButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            editExistingPhoto(photo);
+        });
+    }
+
+    // Клик по "Удалить"
     const deleteButton = item.querySelector('.photo-item__delete');
     if (deleteButton) {
         deleteButton.addEventListener('click', (e) => {
@@ -444,25 +537,40 @@ function createPhotoCard(photo) {
 function createUserPhotoCard(photo) {
     const item = document.createElement('article');
     item.className = 'photo-item';
+
+    // Кнопки показываем только для своих фото
+    const actionsMarkup = photo.ownerType === 'participant'
+        ? `<div class="photo-item__actions">
+               <button class="photo-item__edit" type="button">Редактировать</button>
+               <button class="photo-item__delete" type="button">Удалить</button>
+           </div>`
+        : '';
+
     item.innerHTML = `
         <img src="${photo.src}" alt="${photo.name}">
-        ${photo.ownerType === 'participant' ? '<div class="photo-item__actions"><button class="photo-item__delete" type="button">Удалить</button></div>' : ''}
+        ${actionsMarkup}
         <div class="photo-item__footer">
             <span class="photo-item__name">${photo.name}</span>
             <span class="photo-item__status">${photo.ownerType === 'participant' ? 'Ваше фото' : 'Организатор'}</span>
         </div>
     `;
 
-    const deleteButton = item.querySelector('.photo-item__delete');
+    // Редактировать — только для своих
+    const editButton = item.querySelector('.photo-item__edit');
+    if (editButton) {
+        editButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            editExistingPhoto(photo);
+        });
+    }
 
+    // Удалить — только для своих
+    const deleteButton = item.querySelector('.photo-item__delete');
     if (deleteButton) {
         deleteButton.addEventListener('click', (e) => {
             e.stopPropagation();
             const currentEvent = getCurrentEvent();
-
-            if (!currentEvent) {
-                return;
-            }
+            if (!currentEvent) return;
 
             currentEvent.photos = currentEvent.photos.filter((eventPhoto) => eventPhoto.id !== photo.id);
             persistEvents();
@@ -470,6 +578,8 @@ function createUserPhotoCard(photo) {
             renderUserEvent();
         });
     }
+
+    // Клик по картинке — lightbox
     const img = item.querySelector('img');
     if (img) {
         img.addEventListener('click', () => {

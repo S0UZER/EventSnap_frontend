@@ -11,10 +11,15 @@
     <link rel="stylesheet" href="./css/create_event.css">
     <link rel="stylesheet" href="./css/events.css">
     <link rel="stylesheet" href="./css/lightbox.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+    <link rel="stylesheet" href="./css/editor.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
     <script src="./scripts/config.js" defer></script>
     <script src="./scripts/auth.js" defer></script>
     <script src="./scripts/storage.js" defer></script>
+    <script src="./scripts/filters.js" defer></script>
+    <script src="./scripts/editor.js" defer></script>
     <script src="./scripts/main.js" defer></script>
 </head>
 <body>
@@ -317,6 +322,67 @@
                 <p class="qr-card__value" id="eventQrValue"></p>
             </div>
             <button class="qr-card__action" id="copyQrLinkBtn" type="button">Скопировать ссылку</button>
+        </div>
+    </div>
+</div>
+
+<div id="editorModal">
+    <div class="editor-modal">
+        <div class="editor-modal__header">
+            <div class="editor-modal__title-group">
+                <button class="editor-modal__back" id="editorCloseBtn" type="button">&#8592;</button>
+                <div>
+                    <h2 class="editor-modal__title">Редактирование фото</h2>
+                    <p class="editor-modal__subtitle">Обрежьте и выберите фильтр</p>
+                </div>
+            </div>
+            <button class="editor-modal__reset" id="editorResetBtn" type="button">Сбросить</button>
+        </div>
+
+        <!-- Вкладки -->
+        <div class="editor-modal__tabs">
+            <button class="editor-modal__tab editor-modal__tab--active" id="editorTabCrop" type="button">Обрезка</button>
+            <button class="editor-modal__tab" id="editorTabFilter" type="button">Фильтры</button>
+        </div>
+
+        <!-- Шаг 1: Обрезка -->
+        <div class="editor-modal__step" id="editorCropStep">
+            <div class="editor-modal__canvas">
+                <img id="editorImage" src="" alt="Редактируемое изображение">
+            </div>
+
+            <div class="editor-modal__controls">
+                <div class="editor-modal__zoom">
+                    <span class="editor-modal__zoom-label">Масштаб</span>
+                    <input type="range" id="editorZoomSlider" class="editor-modal__zoom-slider"
+                           min="-1" max="1" step="0.01" value="0">
+                </div>
+            </div>
+
+            <p class="editor-modal__hint">
+                Тащите рамку или углы — меняется область обрезки. Колёсико — зум.
+            </p>
+        </div>
+
+        <!-- Шаг 2: Фильтры -->
+        <div class="editor-modal__step editor-modal__step--hidden" id="editorFilterStep">
+            <div class="editor-modal__filter-preview">
+                <canvas id="editorFilterPreview"></canvas>
+            </div>
+
+            <div class="editor-modal__filter-strip" id="editorFilterList"></div>
+
+            <div class="editor-modal__intensity editor-modal__intensity--hidden" id="editorFilterIntensityWrap">
+                <span class="editor-modal__intensity-label">Интенсивность</span>
+                <input type="range" id="editorFilterIntensity" class="editor-modal__intensity-slider"
+                       min="0" max="1" step="0.01" value="1">
+            </div>
+        </div>
+
+        <!-- Кнопки -->
+        <div class="editor-modal__actions">
+            <button class="editor-modal__btn editor-modal__btn--cancel" id="editorCancelBtn" type="button">Отмена</button>
+            <button class="editor-modal__btn editor-modal__btn--apply" id="editorApplyBtn" type="button">Дальше</button>
         </div>
     </div>
 </div>
