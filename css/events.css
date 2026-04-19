@@ -17,6 +17,10 @@ body {
 .main-header {
     padding: 40px 32px 20px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
 }
 
 .main-header__title {
@@ -744,6 +748,259 @@ body {
     margin: 0;
     color: #8b90a0;
     line-height: 1.5;
+}
+
+/* ===== EVENT DETAIL — new layout ===== */
+.ev-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 32px 32px 24px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.ev-header__title {
+    flex: 1;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1d2e;
+    font-family: "Wix Madefor Display", sans-serif;
+    margin: 0;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ev-header__actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.ev-action-btn {
+    height: 40px;
+    border: none;
+    border-radius: 12px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: "Wix Madefor Display", sans-serif;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.ev-action-btn:hover {
+    transform: translateY(-1px);
+    opacity: 0.88;
+}
+
+.ev-action-btn--qr {
+    background: linear-gradient(88.98deg, #6f02ff 43.24%, #9442ff 99.13%);
+    color: #fff;
+}
+
+.ev-action-btn--participant {
+    background: #efe8ff;
+    color: #6f02ff;
+}
+
+.ev-action-btn--danger {
+    background: #ffe7eb;
+    color: #b42318;
+}
+
+.ev-top {
+    display: grid;
+    grid-template-columns: minmax(260px, 380px) 1fr;
+    gap: 24px;
+    padding: 0 32px;
+    align-items: start;
+}
+
+.ev-cover {
+    border-radius: 28px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #efe5ff 0%, #f8f2ff 100%);
+    box-shadow: 0 24px 48px rgba(111, 2, 255, 0.08);
+    min-height: 260px;
+}
+
+.ev-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    min-height: 260px;
+}
+
+.ev-info {
+    background: #fff;
+    border: 1px solid #edeef5;
+    border-radius: 28px;
+    padding: 28px;
+    box-shadow: 0 18px 36px rgba(26, 29, 46, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ev-info__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ev-info__desc {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #4b5563;
+    font-family: "Wix Madefor Display", sans-serif;
+}
+
+.ev-participants {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ev-participants__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.ev-participants__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1d2e;
+    font-family: "Wix Madefor Display", sans-serif;
+}
+
+.ev-moderation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-radius: 22px;
+    background: #f8f7ff;
+    margin-top: auto;
+}
+
+.ev-moderation__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ev-moderation__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1d2e;
+    font-family: "Wix Madefor Display", sans-serif;
+}
+
+.ev-moderation__sub {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.4;
+    font-family: "Wix Madefor Display", sans-serif;
+}
+
+.ev-gallery {
+    padding: 24px 32px 32px;
+    margin-top: 24px;
+    border-top: 1px solid #edeef5;
+}
+
+.ev-gallery__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.ev-gallery__title {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1d2e;
+    font-family: "Wix Madefor Display", sans-serif;
+}
+
+.ev-gallery__sub {
+    margin: 0;
+    font-size: 14px;
+    color: #8b90a0;
+    font-family: "Wix Madefor Display", sans-serif;
+}
+
+.ev-gallery__controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.photos-grid--wide {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+/* QR Modal */
+#qrModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1100;
+    align-items: center;
+    justify-content: center;
+}
+
+#qrModal.active {
+    display: flex;
+}
+
+.qr-modal {
+    width: 340px;
+    background: #fff;
+    border-radius: 28px;
+    padding: 32px 28px 28px;
+    box-sizing: border-box;
+    box-shadow: 0 18px 48px rgba(26, 29, 46, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.qr-modal__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.qr-modal__back {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: #6f02ff;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.qr-modal__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1d2e;
+    font-family: "Wix Madefor Display", sans-serif;
 }
 
 @media (max-width: 1100px) {

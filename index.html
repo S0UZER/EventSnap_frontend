@@ -11,12 +11,18 @@
     <link rel="stylesheet" href="./css/create_event.css">
     <link rel="stylesheet" href="./css/events.css">
     <link rel="stylesheet" href="./css/lightbox.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="./scripts/config.js" defer></script>
     <script src="./scripts/auth.js" defer></script>
     <script src="./scripts/storage.js" defer></script>
     <script src="./scripts/main.js" defer></script>
 </head>
 <body>
+
+<button class="mobile-burger" id="mobileBurger" type="button">
+    <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <aside class="sidebar" id="sidebar">
 
@@ -53,11 +59,6 @@
         <img src="./img/main_page/btn_hide.svg" alt="Свернуть">
         <span class="sidebar__label">Свернуть меню</span>
     </button>
-
-    <div class="auth">
-        <button class="auth__btn auth__btn--login">Войти</button>
-        <button id="openModal" class="auth__btn auth__btn--register">Регистрация</button>
-    </div>
 
     <div class="modal" id="createModal">
         <div class="modal__content create-modal">
@@ -196,6 +197,10 @@
     <div class="view" id="viewList">
         <header class="main-header">
             <h1 class="main-header__title">Мероприятия</h1>
+            <div class="auth">
+                <button class="auth__btn auth__btn--login">Войти</button>
+                <button id="openModal" class="auth__btn auth__btn--register">Регистрация</button>
+            </div>
         </header>
         <div class="events-empty" id="eventsEmpty">
             <img class="events-empty__image" src="./img/main_page/empty-photo-icon.svg" alt="Нет мероприятий">
@@ -206,101 +211,55 @@
     </div>
 
     <div class="view view--hidden" id="viewEvent">
-        <header class="main-header main-header--event">
+
+        <!-- Шапка -->
+        <header class="ev-header">
             <button class="back-btn" id="backToList">&#8592;</button>
-            <h1 class="main-header__title" id="eventTitle"></h1>
+            <h1 class="ev-header__title" id="eventTitle"></h1>
+            <div class="ev-header__actions">
+                <button class="ev-action-btn ev-action-btn--qr" id="showQrBtn" type="button">QR-код</button>
+                <button class="ev-action-btn ev-action-btn--danger" id="deleteEventBtn" type="button">Удалить</button>
+            </div>
         </header>
 
-        <section class="event-shell">
-            <div class="event-hero">
-                <div class="event-hero__cover">
-                    <img id="eventCoverImage" src="./img/main_page/empty-events.png" alt="Обложка мероприятия">
-                </div>
-                <div class="event-hero__content">
-                    <div class="event-hero__meta">
-                        <span class="event-badge" id="eventDateBadge">Дата не указана</span>
-                        <span class="event-badge event-badge--soft" id="eventPlaceBadge">Место не указано</span>
-                    </div>
-                    <p class="event-hero__description" id="eventDescription">Описание мероприятия пока не заполнено.</p>
-                    <div class="event-switch">
-                        <div>
-                            <h3 class="event-switch__title">Модерация галереи</h3>
-                            <p class="event-switch__text" id="moderationStatusText">Все новые фото сразу попадают в галерею</p>
-                        </div>
-                        <button class="moderation-toggle" id="moderationToggle" type="button" aria-pressed="false">
-                            <span class="moderation-toggle__track"></span>
-                            <span class="moderation-toggle__thumb"></span>
-                        </button>
-                    </div>
-                    <button class="event-delete-btn" id="deleteEventBtn" type="button">Удалить мероприятие</button>
-                </div>
+        <!-- Верхний блок: обложка + инфо -->
+        <section class="ev-top">
+            <div class="ev-cover">
+                <img id="eventCoverImage" src="./img/main_page/empty-events.png" alt="Обложка">
             </div>
-
-            <div class="event-dashboard">
-                <section class="event-panel event-panel--qr">
-                    <div class="event-panel__header">
-                        <div>
-                            <h2 class="event-panel__title">QR-код события</h2>
-                            <p class="event-panel__subtitle">Покажите код участнику, чтобы он быстро вошёл в мероприятие</p>
-                        </div>
-                    </div>
-                    <div class="qr-card">
-                        <div class="qr-card__image-wrap">
-                            <img class="qr-card__image" id="eventQrImage" src="" alt="QR-код события">
-                        </div>
-                        <div class="qr-card__meta">
-                            <p class="qr-card__label">Ссылка для входа</p>
-                            <p class="qr-card__value" id="eventQrValue">eventsnap://event/demo</p>
-                        </div>
-                        <button class="qr-card__action" id="openParticipantViewBtn" type="button">Открыть как участник</button>
-                    </div>
-                </section>
-
-                <section class="event-panel">
-                    <div class="event-panel__header">
-                        <div>
-                            <h2 class="event-panel__title">Участники</h2>
-                            <p class="event-panel__subtitle">Список людей, присоединившихся к событию</p>
-                        </div>
-                        <span class="event-panel__count" id="participantsCount">0</span>
-                    </div>
-                    <div class="participants-list" id="participantsList"></div>
-                </section>
-
-                <section class="event-panel">
-                    <div class="event-panel__header">
-                        <div>
-                            <h2 class="event-panel__title">Галерея</h2>
-                            <p class="event-panel__subtitle">Одобренные фотографии мероприятия</p>
-                        </div>
-                        <div class="event-panel__header-side">
-                            <button class="event-panel__action" id="adminAddPhotoBtn" type="button">Добавить фото</button>
-                            <span class="event-panel__count" id="galleryCount">0</span>
-                        </div>
-                    </div>
-                    <div class="photos-grid" id="photosGrid"></div>
-                    <div class="event-empty-state event-empty-state--hidden" id="galleryEmpty">
-                        <p class="event-empty-state__title">В галерее пока нет фото</p>
-                        <p class="event-empty-state__text">Нажмите «Добавить», чтобы загрузить первую фотографию</p>
-                    </div>
-                </section>
-
-                <section class="event-panel" id="moderationPanel">
-                    <div class="event-panel__header">
-                        <div>
-                            <h2 class="event-panel__title">Модерация</h2>
-                            <p class="event-panel__subtitle">Очередь фото, которые ждут решения организатора</p>
-                        </div>
-                        <span class="event-panel__count" id="moderationCount">0</span>
-                    </div>
-                    <div class="moderation-list" id="moderationList"></div>
-                    <div class="event-empty-state event-empty-state--hidden" id="moderationEmpty">
-                        <p class="event-empty-state__title">Очередь модерации пуста</p>
-                        <p class="event-empty-state__text">Новые фотографии будут появляться здесь, если модерация включена</p>
-                    </div>
-                </section>
+            <div class="ev-info">
+                <div class="ev-info__badges">
+                    <span class="event-badge" id="eventDateBadge">Дата не указана</span>
+                    <span class="event-badge event-badge--soft" id="eventPlaceBadge">Место не указано</span>
+                </div>
+                <p class="ev-info__desc" id="eventDescription">Описание мероприятия пока не заполнено.</p>
             </div>
         </section>
+
+        <!-- Галерея — полная ширина -->
+        <section class="ev-gallery">
+            <div class="ev-gallery__header">
+                <div>
+                    <h2 class="ev-gallery__title">Галерея</h2>
+                    <p class="ev-gallery__sub">Одобренные фотографии мероприятия</p>
+                </div>
+                <div class="ev-gallery__controls">
+                    <div class="gallery-sort" id="gallerySort">
+                        <button class="gallery-sort__btn gallery-sort__btn--active" data-sort="newest" type="button">Новые</button>
+                        <button class="gallery-sort__btn" data-sort="oldest" type="button">Старые</button>
+                    </div>
+                    <button class="event-panel__action" id="adminAddPhotoBtn" type="button">+ Добавить фото</button>
+                    <span class="event-panel__count" id="galleryCount">0</span>
+                </div>
+            </div>
+            <div class="photos-grid photos-grid--wide" id="photosGrid"></div>
+            <div class="event-empty-state event-empty-state--hidden" id="galleryEmpty">
+                <p class="event-empty-state__title">В галерее пока нет фото</p>
+                <p class="event-empty-state__text">Нажмите «+ Добавить фото», чтобы загрузить первую фотографию</p>
+            </div>
+        </section>
+
+
     </div>
 
     <div class="view view--hidden" id="viewUserEvent">
@@ -343,6 +302,25 @@
         </section>
     </div>
 </main>
+<div class="modal" id="qrModal">
+    <div class="qr-modal">
+        <div class="qr-modal__header">
+            <button class="qr-modal__back" id="closeQrModal">&#8592;</button>
+            <h2 class="qr-modal__title">QR-код мероприятия</h2>
+        </div>
+        <div class="qr-card">
+            <div class="qr-card__image-wrap">
+                <div id="eventQrContainer"></div>
+            </div>
+            <div class="qr-card__meta">
+                <p class="qr-card__label">Ссылка для участников</p>
+                <p class="qr-card__value" id="eventQrValue"></p>
+            </div>
+            <button class="qr-card__action" id="copyQrLinkBtn" type="button">Скопировать ссылку</button>
+        </div>
+    </div>
+</div>
+
 <div class="lightbox" id="lightbox">
     <button class="lightbox__close" id="lightboxClose" type="button" aria-label="Закрыть">&times;</button>
     <button class="lightbox__nav lightbox__nav--prev" id="lightboxPrev" type="button" aria-label="Предыдущее">&#8592;</button>

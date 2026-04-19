@@ -91,6 +91,7 @@ let selectedPhotoFiles = [];
 let selectedCreateCoverFile = null;
 let nextEventId = storage.loadNextId();
 let uploadContext = 'organizer';
+let photosSortOrder = 'newest';
 
 function getInitials(name) {
     return name
@@ -492,7 +493,11 @@ function renderGallery(event) {
     galleryCount.textContent = String(event.photos.length);
     galleryEmpty.classList.toggle('event-empty-state--hidden', event.photos.length > 0);
 
-    event.photos.forEach((photo) => {
+    const sorted = [...event.photos].sort((a, b) =>
+        photosSortOrder === 'newest' ? b.id - a.id : a.id - b.id
+    );
+
+    sorted.forEach((photo) => {
         photosGrid.appendChild(createPhotoCard(photo));
     });
 }
@@ -610,12 +615,8 @@ function renderCurrentEvent() {
     eventDateBadge.textContent = formatEventDate(event.date);
     eventPlaceBadge.textContent = event.place || 'Место не указано';
     eventDescription.textContent = event.description || 'Описание мероприятия пока не заполнено.';
-    eventQrValue.textContent = event.qrValue;
-    eventQrImage.src = buildQrSvg(event.qrValue);
 
-    renderParticipants(event);
     renderGallery(event);
-    renderModerationQueue(event);
 }
 
 function renderUserEvent() {
@@ -788,6 +789,56 @@ if (backToAdminView) {
     });
 }
 
+const showQrBtn = document.getElementById('showQrBtn');
+const qrModal = document.getElementById('qrModal');
+const closeQrModal = document.getElementById('closeQrModal');
+const copyQrLinkBtn = document.getElementById('copyQrLinkBtn');
+const eventQrContainer = document.getElementById('eventQrContainer');
+
+function openQrModal(event) {
+    const link = event.qrValue || '';
+    eventQrContainer.innerHTML = '';
+    new QRCode(eventQrContainer, {
+        text: link || 'eventsnap',
+        width: 188,
+        height: 188,
+        colorDark: '#111827',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M,
+    });
+    if (eventQrValue) eventQrValue.textContent = link;
+    qrModal.classList.add('active');
+}
+
+if (showQrBtn) {
+    showQrBtn.addEventListener('click', () => {
+        const event = getCurrentEvent();
+        if (event) openQrModal(event);
+    });
+}
+
+if (closeQrModal) {
+    closeQrModal.addEventListener('click', () => {
+        qrModal?.classList.remove('active');
+    });
+}
+
+if (qrModal) {
+    qrModal.addEventListener('click', (e) => {
+        if (e.target === qrModal) qrModal.classList.remove('active');
+    });
+}
+
+if (copyQrLinkBtn) {
+    copyQrLinkBtn.addEventListener('click', () => {
+        const link = eventQrValue?.textContent || '';
+        navigator.clipboard.writeText(link).then(() => {
+            copyQrLinkBtn.textContent = 'Скопировано!';
+            setTimeout(() => { copyQrLinkBtn.textContent = 'Скопировать ссылку'; }, 1800);
+        });
+    });
+}
+
 if (openParticipantViewBtn) {
     openParticipantViewBtn.addEventListener('click', () => {
         const currentEvent = getCurrentEvent();
@@ -872,9 +923,6 @@ if (addPhotoForm) {
             } else {
                 currentEvent.photos.unshift(...newPhotos);
 
-                if (uploadContext === 'organizer' && newPhotos[0]) {
-                    currentEvent.cover = newPhotos[0].src;
-                }
             }
 
             persistEvents();
@@ -910,12 +958,19 @@ if (moderationToggle) {
 if (deleteEventBtn) {
     deleteEventBtn.addEventListener('click', () => {
         const currentEvent = getCurrentEvent();
-
-        if (!currentEvent) {
-            return;
-        }
-
+        if (!currentEvent) return;
+        if (!confirm(`Удалить мероприятие «${currentEvent.name}»? Это действие нельзя отменить.`)) return;
         deleteCurrentEvent();
+    });
+}
+
+const fileBtn = document.querySelector('.sidebar__btn--file');
+if (fileBtn) {
+    fileBtn.addEventListener('click', () => {
+        viewEvent?.classList.add('view--hidden');
+        viewUserEvent?.classList.add('view--hidden');
+        viewList?.classList.remove('view--hidden');
+        currentEventId = null;
     });
 }
 
@@ -937,6 +992,49 @@ if (modal) {
             modal.classList.remove('active');
         }
     });
+}
+
+// ===== Сортировка галереи =====
+const gallerySort = document.getElementById('gallerySort');
+if (gallerySort) {
+    gallerySort.addEventListener('click', (e) => {
+        const btn = e.target.closest('.gallery-sort__btn');
+        if (!btn) return;
+        const order = btn.dataset.sort;
+        if (order === photosSortOrder) return;
+        photosSortOrder = order;
+        gallerySort.querySelectorAll('.gallery-sort__btn').forEach((b) => {
+            b.classList.toggle('gallery-sort__btn--active', b.dataset.sort === order);
+        });
+        const currentEvent = getCurrentEvent();
+        if (currentEvent) renderGallery(currentEvent);
+    });
+}
+
+// ===== Мобильный бургер =====
+const mobileBurger = document.getElementById('mobileBurger');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function openMobileSidebar() {
+    sidebar.classList.add('sidebar--mobile-open');
+    sidebarOverlay.classList.add('active');
+}
+
+function closeMobileSidebar() {
+    sidebar.classList.remove('sidebar--mobile-open');
+    sidebarOverlay.classList.remove('active');
+}
+
+if (mobileBurger) {
+    mobileBurger.addEventListener('click', openMobileSidebar);
+}
+
+if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', closeMobileSidebar);
+}
+
+if (toggleBtn) {
+    toggleBtn.addEventListener('click', closeMobileSidebar);
 }
 
 setSidebarButtonLabels();
