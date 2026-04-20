@@ -562,7 +562,7 @@ function getImageSize(file) {
 
 async function uploadCover(eventId, file) {
     const upload = await api.events.createCoverUploadUrl(eventId, file.type || 'image/jpeg');
-    await api.uploadToPresignedUrl(upload.upload_url, file);
+    await api.uploadToPresignedUrl(upload.upload_url, file, upload);
     localCoverUrls.set(eventId, URL.createObjectURL(file));
     return api.events.completeCoverUpload(eventId, upload.s3_key);
 }
@@ -570,8 +570,8 @@ async function uploadCover(eventId, file) {
 async function uploadPhoto(event, file) {
     const size = await getImageSize(file);
     const upload = await api.photos.createUploadUrl(event.id, file, size);
-    await api.uploadToPresignedUrl(upload.upload_url, file);
-    return upload;
+    await api.uploadToPresignedUrl(upload.upload_url, file, upload);
+    return api.photos.complete(upload.photo_id, upload.s3_key);
 }
 
 function createParticipantCard(participant) {

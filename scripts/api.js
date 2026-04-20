@@ -169,12 +169,18 @@ const api = {
         }
     },
 
-    async uploadToPresignedUrl(uploadUrl, file) {
+    async uploadToPresignedUrl(uploadUrl, file, uploadOptions = {}) {
+        const method = uploadOptions.method || uploadOptions.upload_method || 'PUT';
+        const headers = uploadOptions.headers || uploadOptions.upload_headers || {};
+        const requestHeaders = { ...headers };
+
+        if (!requestHeaders['Content-Type'] && !requestHeaders['content-type']) {
+            requestHeaders['Content-Type'] = file.type || 'application/octet-stream';
+        }
+
         const response = await fetch(uploadUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': file.type || 'application/octet-stream',
-            },
+            method,
+            headers: requestHeaders,
             body: file,
         });
 
@@ -322,6 +328,13 @@ const api = {
                     width_px: size.width || null,
                     height_px: size.height || null,
                 },
+            });
+        },
+
+        complete(photoId, s3Key) {
+            return api.request(`/photos/${photoId}/complete`, {
+                method: 'POST',
+                body: { s3_key: s3Key },
             });
         },
 
