@@ -314,6 +314,7 @@ body {
     display: grid;
     grid-template-columns: 1.05fr 1.35fr;
     gap: 24px;
+    padding: 24px 32px 0;
 }
 
 .event-panel {
@@ -1014,6 +1015,7 @@ body {
 @media (max-width: 720px) {
     .main-header,
     .event-shell,
+    .event-dashboard,
     .events-grid,
     .user-event-shell {
         padding-left: 20px;

@@ -16,8 +16,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
     <script src="./scripts/config.js" defer></script>
+    <script src="./scripts/api.js" defer></script>
     <script src="./scripts/auth.js" defer></script>
-    <script src="./scripts/storage.js" defer></script>
     <script src="./scripts/filters.js" defer></script>
     <script src="./scripts/editor.js" defer></script>
     <script src="./scripts/main.js" defer></script>
@@ -44,7 +44,7 @@
             <line x1="2" y1="12.5" x2="23" y2="12.5" stroke="white" stroke-width="3" stroke-linecap="round"/>
         </svg>
     </button>
-    <button class="sidebar__btn sidebar__btn--add">
+    <button class="sidebar__btn sidebar__btn--add" id="openJoinModal">
         <img src="./img/main_page/btn_add1.svg" alt="Добавить">
         <span class="sidebar__label">Добавить</span>
         <svg class="sidebar__btn-plus sidebar__label" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -134,7 +134,7 @@
 
             <form class="create-modal__form" id="joinEventForm">
                 <input class="create-modal__input" type="text" id="joinEventCode" placeholder="Введите код или ссылку мероприятия">
-                <input class="create-modal__input" type="text" id="joinEventName" placeholder="Название в вашем списке">
+                <input class="create-modal__input" type="text" id="joinEventName" placeholder="Название подтянется с сервера" disabled>
                 <button type="submit" class="create-modal__submit">Добавить в список</button>
             </form>
         </div>
@@ -147,9 +147,9 @@
             <h2 class="modal__title">Зарегистрироваться</h2>
 
             <form class="modal__form">
-                <input type="email" placeholder="Введите e-mail">
-                <input type="password" placeholder="Введите пароль">
-                <input type="password" placeholder="Повторно введите пароль">
+                <input type="email" placeholder="Введите e-mail" required>
+                <input type="password" placeholder="Введите пароль" minlength="8" required>
+                <input type="password" placeholder="Повторно введите пароль" minlength="8" required>
 
                 <button type="submit" class="modal__submit">Зарегистрироваться</button>
             </form>
@@ -223,6 +223,7 @@
             <h1 class="ev-header__title" id="eventTitle"></h1>
             <div class="ev-header__actions">
                 <button class="ev-action-btn ev-action-btn--qr" id="showQrBtn" type="button">QR-код</button>
+                <button class="ev-action-btn ev-action-btn--participant" id="openParticipantViewBtn" type="button">Вид участника</button>
                 <button class="ev-action-btn ev-action-btn--danger" id="deleteEventBtn" type="button">Удалить</button>
             </div>
         </header>
@@ -230,7 +231,7 @@
         <!-- Верхний блок: обложка + инфо -->
         <section class="ev-top">
             <div class="ev-cover">
-                <img id="eventCoverImage" src="./img/main_page/empty-events.png" alt="Обложка">
+                <img id="eventCoverImage" src="./img/main_page/empty-photo-icon.svg" alt="Обложка">
             </div>
             <div class="ev-info">
                 <div class="ev-info__badges">
@@ -238,7 +239,45 @@
                     <span class="event-badge event-badge--soft" id="eventPlaceBadge">Место не указано</span>
                 </div>
                 <p class="ev-info__desc" id="eventDescription">Описание мероприятия пока не заполнено.</p>
+                <div class="ev-moderation">
+                    <div class="ev-moderation__text">
+                        <span class="ev-moderation__title">Модерация фото</span>
+                        <span class="ev-moderation__sub" id="moderationStatusText">Все новые фото сразу попадают в галерею</span>
+                    </div>
+                    <button class="moderation-toggle" id="moderationToggle" type="button" aria-pressed="false">
+                        <span class="moderation-toggle__track"></span>
+                        <span class="moderation-toggle__thumb"></span>
+                    </button>
+                </div>
             </div>
+        </section>
+
+        <section class="event-dashboard">
+            <section class="event-panel">
+                <div class="event-panel__header">
+                    <div>
+                        <h2 class="event-panel__title">Участники</h2>
+                        <p class="event-panel__subtitle">Люди, которые уже присоединились к событию</p>
+                    </div>
+                    <span class="event-panel__count" id="participantsCount">0</span>
+                </div>
+                <div class="participants-list" id="participantsList"></div>
+            </section>
+
+            <section class="event-panel" id="moderationPanel">
+                <div class="event-panel__header">
+                    <div>
+                        <h2 class="event-panel__title">Очередь модерации</h2>
+                        <p class="event-panel__subtitle">Фото ждут решения организатора</p>
+                    </div>
+                    <span class="event-panel__count" id="moderationCount">0</span>
+                </div>
+                <div class="moderation-list" id="moderationList"></div>
+                <div class="event-empty-state event-empty-state--hidden" id="moderationEmpty">
+                    <p class="event-empty-state__title">Очередь пуста</p>
+                    <p class="event-empty-state__text">Новые фото появятся здесь, когда модерация включена</p>
+                </div>
+            </section>
         </section>
 
         <!-- Галерея — полная ширина -->
@@ -276,7 +315,7 @@
         <section class="user-event-shell">
             <div class="user-event-hero">
                 <div class="user-event-hero__cover">
-                    <img id="userEventCoverImage" src="./img/main_page/empty-events.png" alt="Обложка мероприятия для участника">
+                    <img id="userEventCoverImage" src="./img/main_page/empty-photo-icon.svg" alt="Обложка мероприятия для участника">
                 </div>
                 <div class="user-event-hero__content">
                     <div class="user-event-hero__meta">

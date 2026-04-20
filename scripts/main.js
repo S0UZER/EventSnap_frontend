@@ -43,7 +43,6 @@ const eventCoverImage = document.getElementById('eventCoverImage');
 const eventDateBadge = document.getElementById('eventDateBadge');
 const eventPlaceBadge = document.getElementById('eventPlaceBadge');
 const eventDescription = document.getElementById('eventDescription');
-const eventQrImage = document.getElementById('eventQrImage');
 const eventQrValue = document.getElementById('eventQrValue');
 const participantsList = document.getElementById('participantsList');
 const participantsCount = document.getElementById('participantsCount');
@@ -74,27 +73,47 @@ const openModalBtn = document.getElementById('openModal');
 const modal = document.getElementById('modal');
 const closeModalBtn = document.getElementById('closeModal');
 
-const defaultCover = './img/main_page/empty-events.png';
+const showQrBtn = document.getElementById('showQrBtn');
+const qrModal = document.getElementById('qrModal');
+const closeQrModal = document.getElementById('closeQrModal');
+const copyQrLinkBtn = document.getElementById('copyQrLinkBtn');
+const eventQrContainer = document.getElementById('eventQrContainer');
+
+const loginModal = document.getElementById('loginModal');
+const closeLoginModalBtn = document.getElementById('closeLoginModal');
+const switchToRegisterLink = document.getElementById('switchToRegister');
+const switchToLoginLink = document.getElementById('switchToLogin');
+
+const mobileBurger = document.getElementById('mobileBurger');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const gallerySort = document.getElementById('gallerySort');
+const fileBtn = document.querySelector('.sidebar__btn--file');
+
+const lightbox = document.getElementById('lightbox');
+const lightboxImage = document.getElementById('lightboxImage');
+const lightboxCaption = document.getElementById('lightboxCaption');
+const lightboxClose = document.getElementById('lightboxClose');
+const lightboxPrev = document.getElementById('lightboxPrev');
+const lightboxNext = document.getElementById('lightboxNext');
+
+const defaultCover = './img/main_page/empty-photo-icon.svg';
 const organizerName = 'Вы';
 const participantName = 'Участник';
 
-const participantPool = [
-    { name: 'Алина Сергеева', role: 'Организатор' },
-    { name: 'Максим Громов', role: 'Гость по QR' },
-    { name: 'Ева Латыпова', role: 'Участник' },
-    { name: 'Илья Волков', role: 'Фотограф' },
-];
-
-const events = storage.loadEvents();
+let events = [];
 let currentEventId = null;
 let selectedPhotoFiles = [];
 let selectedCreateCoverFile = null;
-let nextEventId = storage.loadNextId();
 let uploadContext = 'organizer';
 let photosSortOrder = 'newest';
+let lightboxPhotos = [];
+let lightboxIndex = 0;
+let handledJoinToken = null;
+
+const localCoverUrls = new Map();
 
 function getInitials(name) {
-    return name
+    return (name || '')
         .split(' ')
         .filter(Boolean)
         .slice(0, 2)
@@ -120,100 +139,128 @@ function formatEventDate(value) {
     });
 }
 
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
-        reader.readAsDataURL(file);
-    });
-}
-
-function base64ToFile(base64, filename = 'photo.jpg') {
-    // Разбираем data URL: "data:image/jpeg;base64,...."
-    const [header, data] = base64.split(',');
-    const mimeMatch = header.match(/:(.*?);/);
-    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-
-    // Декодируем base64 в байты
-    const byteString = atob(data);
-    const bytes = new Uint8Array(byteString.length);
-    for (let i = 0; i < byteString.length; i += 1) {
-        bytes[i] = byteString.charCodeAt(i);
+function buildStartsAt(dateValue) {
+    if (!dateValue) {
+        return null;
     }
 
-    return new File([bytes], filename, { type: mime });
+    return new Date(`${dateValue}T00:00:00`).toISOString();
 }
 
-function hashString(value) {
-    let hash = 0;
+function setControlLoading(button, isLoading, loadingText) {
+    if (!button) return;
 
-    for (let index = 0; index < value.length; index += 1) {
-        hash = (hash << 5) - hash + value.charCodeAt(index);
-        hash |= 0;
+    if (isLoading) {
+        button.dataset.originalText = button.textContent;
+        button.textContent = loadingText;
+        button.disabled = true;
+        return;
     }
 
-    return Math.abs(hash);
+    button.textContent = button.dataset.originalText || button.textContent;
+    button.disabled = false;
 }
 
-function buildQrSvg(seed) {
-    const size = 21;
-    const cell = 8;
-    const margin = 12;
-    const svgSize = size * cell + margin * 2;
-    let rects = '';
+function getCurrentUser() {
+    return auth?.getUser?.() ?? null;
+}
 
-    const isFinderCell = (x, y, startX, startY) => {
-        const relX = x - startX;
-        const relY = y - startY;
-        const inSquare = relX >= 0 && relX < 7 && relY >= 0 && relY < 7;
+function isOrganizer(rawEvent) {
+    const user = getCurrentUser();
+    return Boolean(user?.id && rawEvent?.organizer_id === user.id);
+}
 
-        if (!inSquare) {
-            return false;
-        }
+function normalizeEvent(rawEvent) {
+    const organizer = isOrganizer(rawEvent);
+    const place = rawEvent.venue_name || rawEvent.venue_address || '';
 
-        const isBorder = relX === 0 || relX === 6 || relY === 0 || relY === 6;
-        const isCenter = relX >= 2 && relX <= 4 && relY >= 2 && relY <= 4;
-        return isBorder || isCenter;
+    return {
+        id: rawEvent.id,
+        raw: rawEvent,
+        name: rawEvent.title || 'Без названия',
+        description: rawEvent.description || '',
+        place,
+        date: rawEvent.starts_at || '',
+        cover: localCoverUrls.get(rawEvent.id) || rawEvent.cover_url || rawEvent.cover || defaultCover,
+        coverS3Key: rawEvent.cover_s3_key || null,
+        accessRole: organizer ? 'organizer' : 'participant',
+        moderationEnabled: Boolean(rawEvent.moderation_enabled),
+        qrToken: rawEvent.qr_token || '',
+        participants: [],
+        photos: [],
+        pendingPhotos: [],
+        loaded: false,
     };
+}
 
-    for (let y = 0; y < size; y += 1) {
-        for (let x = 0; x < size; x += 1) {
-            const inFinder =
-                isFinderCell(x, y, 0, 0) ||
-                isFinderCell(x, y, size - 7, 0) ||
-                isFinderCell(x, y, 0, size - 7);
-            const hash = hashString(`${seed}-${x}-${y}`);
-            const shouldFill = inFinder || hash % 3 === 0 || (x + y + hash) % 7 === 0;
+function upsertEvent(rawEvent) {
+    const normalized = normalizeEvent(rawEvent);
+    const index = events.findIndex((event) => event.id === normalized.id);
 
-            if (!shouldFill) {
-                continue;
-            }
-
-            rects += `<rect x="${margin + x * cell}" y="${margin + y * cell}" width="${cell}" height="${cell}" rx="1.5" fill="#111827"/>`;
-        }
+    if (index === -1) {
+        events.push(normalized);
+        return normalized;
     }
 
-    const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" fill="none">
-            <rect width="${svgSize}" height="${svgSize}" rx="28" fill="white"/>
-            ${rects}
-        </svg>
-    `;
-
-    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-}
-
-function isEventViewOpen() {
-    return viewEvent && !viewEvent.classList.contains('view--hidden');
-}
-
-function isUserEventViewOpen() {
-    return viewUserEvent && !viewUserEvent.classList.contains('view--hidden');
+    const existing = events[index];
+    events[index] = {
+        ...existing,
+        ...normalized,
+        participants: existing.participants || [],
+        photos: existing.photos || [],
+        pendingPhotos: existing.pendingPhotos || [],
+        loaded: existing.loaded,
+    };
+    return events[index];
 }
 
 function getCurrentEvent() {
     return events.find((event) => event.id === currentEventId) ?? null;
+}
+
+function normalizeParticipant(rawParticipant) {
+    return {
+        id: rawParticipant.user_id,
+        name: rawParticipant.display_name || 'Участник',
+        role: rawParticipant.role || 'participant',
+        joinedAt: rawParticipant.joined_at || '',
+    };
+}
+
+function normalizePhoto(rawPhoto, event) {
+    const user = getCurrentUser();
+    const isOwn = Boolean(user?.id && rawPhoto.uploader_id === user.id);
+    const src = rawPhoto.original_url || rawPhoto.thumbnail_url || defaultCover;
+
+    return {
+        id: rawPhoto.id,
+        raw: rawPhoto,
+        src,
+        name: rawPhoto.original_filename || 'Фото',
+        author: isOwn ? organizerName : participantName,
+        ownerType: isOwn ? 'participant' : 'organizer',
+        isOwn,
+        canDelete: event?.accessRole === 'organizer' || isOwn,
+        moderationStatus: rawPhoto.moderation_status || 'approved',
+        moderationComment: rawPhoto.moderation_comment || '',
+        createdAt: rawPhoto.created_at || '',
+    };
+}
+
+function eventPayloadFromForm(inputs) {
+    const title = inputs[0].value.trim() || 'Без названия';
+    const description = inputs[1].value.trim();
+    const place = inputs[2].value.trim();
+    const date = inputs[3].value;
+
+    return {
+        title,
+        description: description || null,
+        venue_name: place || null,
+        venue_address: null,
+        starts_at: buildStartsAt(date),
+        ends_at: null,
+    };
 }
 
 function setSidebarButtonLabels() {
@@ -240,12 +287,78 @@ function setSidebarButtonLabels() {
     }
 }
 
-function persistEvents() {
-    storage.saveEvents(events);
-    storage.saveNextId(nextEventId);
+async function loadEventsFromBackend() {
+    if (!auth.isLoggedIn()) {
+        events = [];
+        currentEventId = null;
+        renderEvents();
+        return;
+    }
+
+    try {
+        const response = await api.events.list({ role: 'all', limit: 100 });
+        events = (response.items || []).map(normalizeEvent);
+        renderEvents();
+    } catch (err) {
+        if (err.status !== 401) {
+            alert(`Не удалось загрузить мероприятия: ${err.message}`);
+        }
+    }
+}
+
+async function hydrateEvent(eventId) {
+    const rawEvent = await api.events.get(eventId);
+    const event = upsertEvent(rawEvent);
+
+    const requests = [
+        api.gallery.get(eventId),
+        api.photos.list(eventId, { limit: 100 }),
+        api.events.participants(eventId, { limit: 100 }),
+    ];
+
+    if (event.accessRole === 'organizer') {
+        requests.push(api.photos.pending(eventId, { limit: 100 }));
+    }
+
+    const [galleryResult, photosResult, participantsResult, pendingResult] = await Promise.allSettled(requests);
+
+    if (galleryResult.status === 'fulfilled') {
+        event.moderationEnabled = Boolean(galleryResult.value.moderation_enabled);
+    }
+
+    if (photosResult.status === 'fulfilled') {
+        event.photos = (photosResult.value.items || []).map((photo) => normalizePhoto(photo, event));
+    }
+
+    if (participantsResult.status === 'fulfilled') {
+        event.participants = (participantsResult.value.items || []).map(normalizeParticipant);
+    }
+
+    if (pendingResult?.status === 'fulfilled') {
+        event.pendingPhotos = (pendingResult.value.items || []).map((photo) => normalizePhoto(photo, event));
+    } else if (event.accessRole !== 'organizer') {
+        event.pendingPhotos = [];
+    }
+
+    event.loaded = true;
+    return event;
+}
+
+async function refreshCurrentEvent() {
+    if (!currentEventId) {
+        return null;
+    }
+
+    const event = await hydrateEvent(currentEventId);
+    renderCurrentEvent();
+    renderUserEvent();
+    renderEvents();
+    return event;
 }
 
 function renderEvents() {
+    if (!eventsGrid) return;
+
     eventsGrid.innerHTML = '';
     eventsEmpty?.classList.toggle('events-empty--hidden', events.length > 0);
 
@@ -254,14 +367,24 @@ function renderEvents() {
         card.className = 'event-card';
         card.innerHTML = `
             <div class="event-card__img">
-                <img src="${event.cover || defaultCover}" alt="${event.name}">
+                <img src="" alt="">
             </div>
-            <span class="event-card__name">${event.name}</span>
+            <span class="event-card__name"></span>
             <div class="event-card__meta">
-                <span class="event-card__badge">${formatEventDate(event.date)}</span>
-                <span class="event-card__badge">${event.place || 'Без адреса'}</span>
+                <span class="event-card__badge"></span>
+                <span class="event-card__badge"></span>
             </div>
         `;
+
+        const img = card.querySelector('img');
+        const name = card.querySelector('.event-card__name');
+        const badges = card.querySelectorAll('.event-card__badge');
+
+        img.src = event.cover || defaultCover;
+        img.alt = event.name;
+        name.textContent = event.name;
+        badges[0].textContent = formatEventDate(event.date);
+        badges[1].textContent = event.place || 'Без адреса';
 
         card.addEventListener('click', () => {
             if (event.accessRole === 'participant') {
@@ -278,11 +401,21 @@ function renderEvents() {
 function resetCreateModal() {
     selectedCreateCoverFile = null;
     createForm?.reset();
-    createCoverInput.value = '';
-    createCoverPreview.src = '';
-    createCoverPreviewWrap.classList.add('create-cover__preview--hidden');
-    createCoverFileName.textContent = '';
-    createCoverFileName.classList.add('create-cover__file--hidden');
+
+    if (createCoverInput) {
+        createCoverInput.value = '';
+    }
+
+    if (createCoverPreview) {
+        createCoverPreview.src = '';
+    }
+
+    createCoverPreviewWrap?.classList.add('create-cover__preview--hidden');
+
+    if (createCoverFileName) {
+        createCoverFileName.textContent = '';
+        createCoverFileName.classList.add('create-cover__file--hidden');
+    }
 }
 
 async function handleCreateCoverSelection(file) {
@@ -291,7 +424,6 @@ async function handleCreateCoverSelection(file) {
     }
 
     try {
-        // Открываем редактор перед сохранением
         const editedFile = await openImageEditor(file);
 
         selectedCreateCoverFile = editedFile;
@@ -304,7 +436,7 @@ async function handleCreateCoverSelection(file) {
             console.error('Ошибка редактирования:', err);
             alert('Не удалось обработать изображение');
         }
-        // Если отменили — сбрасываем input, чтобы можно было выбрать тот же файл заново
+
         createCoverInput.value = '';
     }
 }
@@ -312,34 +444,61 @@ async function handleCreateCoverSelection(file) {
 function resetAddPhotoModal() {
     selectedPhotoFiles = [];
     addPhotoForm?.reset();
-    addPhotoInput.value = '';
-    photoPreview.src = '';
-    photoPreviewWrap.classList.add('upload-modal__preview--hidden');
-    selectedPhotoName.textContent = '';
-    selectedPhotoName.classList.add('upload-modal__file--hidden');
+
+    if (addPhotoInput) {
+        addPhotoInput.value = '';
+    }
+
+    if (photoPreview) {
+        photoPreview.src = '';
+    }
+
+    photoPreviewWrap?.classList.add('upload-modal__preview--hidden');
+
+    if (selectedPhotoName) {
+        selectedPhotoName.textContent = '';
+        selectedPhotoName.classList.add('upload-modal__file--hidden');
+    }
+}
+
+function isEventViewOpen() {
+    return viewEvent && !viewEvent.classList.contains('view--hidden');
+}
+
+function isUserEventViewOpen() {
+    return viewUserEvent && !viewUserEvent.classList.contains('view--hidden');
 }
 
 function updateAddPhotoModalState() {
     const hasOpenEvent = (isEventViewOpen() || isUserEventViewOpen()) && Boolean(getCurrentEvent());
-    addPhotoHint.textContent = hasOpenEvent
-        ? (uploadContext === 'participant'
-            ? 'Выберите изображение, чтобы добавить его в галерею как участник'
-            : 'Выберите изображение, чтобы добавить его в текущее мероприятие')
-        : 'Сначала откройте мероприятие, а потом загрузите в него фотографию';
-    addPhotoHint.classList.toggle('upload-modal__hint--warning', !hasOpenEvent);
-    selectPhotoBtn.disabled = !hasOpenEvent;
-    savePhotoBtn.disabled = !hasOpenEvent || selectedPhotoFiles.length === 0;
+
+    if (addPhotoHint) {
+        addPhotoHint.textContent = hasOpenEvent
+            ? (uploadContext === 'participant'
+                ? 'Выберите изображение, чтобы добавить его в галерею как участник'
+                : 'Выберите изображение, чтобы добавить его в текущее мероприятие')
+            : 'Сначала откройте мероприятие, а потом загрузите в него фотографию';
+        addPhotoHint.classList.toggle('upload-modal__hint--warning', !hasOpenEvent);
+    }
+
+    if (selectPhotoBtn) {
+        selectPhotoBtn.disabled = !hasOpenEvent;
+    }
+
+    if (savePhotoBtn) {
+        savePhotoBtn.disabled = !hasOpenEvent || selectedPhotoFiles.length === 0;
+    }
 }
 
 function openAddPhotoModal(context = 'organizer') {
     uploadContext = context;
     resetAddPhotoModal();
     updateAddPhotoModalState();
-    addPhotoModal.classList.add('active');
+    addPhotoModal?.classList.add('active');
 }
 
 function closeUploadModal() {
-    addPhotoModal.classList.remove('active');
+    addPhotoModal?.classList.remove('active');
     resetAddPhotoModal();
 }
 
@@ -350,24 +509,23 @@ async function handleSelectedPhotos(files) {
         return;
     }
 
-    // Прогоняем каждое фото через редактор по очереди
     const editedFiles = [];
+
     for (const file of validFiles) {
         try {
             const edited = await openImageEditor(file);
             editedFiles.push(edited);
         } catch (err) {
             if (err === 'cancelled') {
-                // Пользователь отменил это конкретное фото — просто пропускаем
                 continue;
             }
+
             console.error('Ошибка редактирования:', err);
             alert('Не удалось обработать одно из изображений');
         }
     }
 
     if (editedFiles.length === 0) {
-        // Все отменили — чистим input
         addPhotoInput.value = '';
         return;
     }
@@ -382,262 +540,219 @@ async function handleSelectedPhotos(files) {
     updateAddPhotoModalState();
 }
 
-function createDemoParticipants() {
-    return participantPool.slice(0, 3).map((participant) => ({ ...participant }));
+function getImageSize(file) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = () => {
+            const size = { width: img.naturalWidth, height: img.naturalHeight };
+            URL.revokeObjectURL(objectUrl);
+            resolve(size);
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            resolve({});
+        };
+
+        img.src = objectUrl;
+    });
 }
 
-function createEventFromForm(inputs) {
-    const name = inputs[0].value.trim() || 'Без названия';
-    const description = inputs[1].value.trim();
-    const place = inputs[2].value.trim();
-    const date = inputs[3].value;
-
-    return {
-        id: nextEventId++,
-        name,
-        description,
-        place,
-        date,
-        cover: defaultCover,
-        accessRole: 'organizer',
-        moderationEnabled: false,
-        qrValue: `eventsnap://event/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        participants: createDemoParticipants(),
-        photos: [],
-        pendingPhotos: [],
-        lastModerationComment: '',
-    };
+async function uploadCover(eventId, file) {
+    const upload = await api.events.createCoverUploadUrl(eventId, file.type || 'image/jpeg');
+    await api.uploadToPresignedUrl(upload.upload_url, file);
+    localCoverUrls.set(eventId, URL.createObjectURL(file));
+    return api.events.completeCoverUpload(eventId, upload.s3_key);
 }
 
-function createJoinedEvent(code, customName) {
-    const suffix = code.trim() || `event-${Date.now()}`;
-    const fallbackName = customName.trim() || 'Добавленное мероприятие';
-
-    return {
-        id: nextEventId++,
-        name: fallbackName,
-        description: 'Мероприятие добавлено в ваш список по коду или ссылке. Здесь вы можете смотреть галерею и загружать свои фотографии.',
-        place: 'Онлайн по QR / ссылке',
-        date: '',
-        cover: defaultCover,
-        accessRole: 'participant',
-        moderationEnabled: false,
-        qrValue: `eventsnap://joined/${suffix.replace(/\s+/g, '-').toLowerCase()}`,
-        participants: [
-            { name: 'Организатор события', role: 'Организатор' },
-            { name: participantName, role: 'Участник' },
-        ],
-        photos: [],
-        pendingPhotos: [],
-        lastModerationComment: '',
-    };
+async function uploadPhoto(event, file) {
+    const size = await getImageSize(file);
+    const upload = await api.photos.createUploadUrl(event.id, file, size);
+    await api.uploadToPresignedUrl(upload.upload_url, file);
+    return upload;
 }
 
-function createParticipantMarkup(participant) {
-    return `
-        <article class="participant-card">
-            <div class="participant-card__avatar">${getInitials(participant.name)}</div>
-            <div>
-                <p class="participant-card__name">${participant.name}</p>
-                <p class="participant-card__role">${participant.role}</p>
-            </div>
-        </article>
-    `;
-}
-
-async function editExistingPhoto(photo) {
-    try {
-        // Превращаем base64 обратно в File
-        const file = base64ToFile(photo.src, photo.name || 'photo.jpg');
-
-        // Открываем редактор
-        const editedFile = await openImageEditor(file);
-
-        // Новый base64 из отредактированного файла
-        const newBase64 = await fileToBase64(editedFile);
-
-        // Перезаписываем src у фото в массиве (id сохраняем)
-        const currentEvent = getCurrentEvent();
-        if (!currentEvent) return;
-
-        const target = currentEvent.photos.find((p) => p.id === photo.id);
-        if (target) {
-            target.src = newBase64;
-            target.name = editedFile.name;
-        }
-
-        persistEvents();
-        renderCurrentEvent();
-        renderUserEvent();
-        renderEvents();
-    } catch (err) {
-        if (err !== 'cancelled') {
-            console.error('Ошибка редактирования существующего фото:', err);
-            alert('Не удалось отредактировать фото');
-        }
-    }
-}
-
-function createPhotoCard(photo) {
-    const item = document.createElement('article');
-    item.className = 'photo-item';
-    item.innerHTML = `
-        <img src="${photo.src}" alt="${photo.name}">
-        <div class="photo-item__actions">
-            <button class="photo-item__edit" type="button">Редактировать</button>
-            <button class="photo-item__delete" type="button">Удалить</button>
-        </div>
-        <div class="photo-item__footer">
-            <span class="photo-item__name">${photo.name}</span>
-            <span class="photo-item__status">Одобрено</span>
+function createParticipantCard(participant) {
+    const card = document.createElement('article');
+    card.className = 'participant-card';
+    card.innerHTML = `
+        <div class="participant-card__avatar"></div>
+        <div>
+            <p class="participant-card__name"></p>
+            <p class="participant-card__role"></p>
         </div>
     `;
 
-    // Клик по "Редактировать"
-    const editButton = item.querySelector('.photo-item__edit');
-    if (editButton) {
-        editButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            editExistingPhoto(photo);
-        });
-    }
+    card.querySelector('.participant-card__avatar').textContent = getInitials(participant.name);
+    card.querySelector('.participant-card__name').textContent = participant.name;
+    card.querySelector('.participant-card__role').textContent = participant.role === 'organizer'
+        ? 'Организатор'
+        : 'Участник';
 
-    // Клик по "Удалить"
-    const deleteButton = item.querySelector('.photo-item__delete');
-    if (deleteButton) {
-        deleteButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-
-            const currentEvent = getCurrentEvent();
-            if (!currentEvent) return;
-
-            if (!confirm('Удалить это фото?')) return;
-
-            currentEvent.photos = currentEvent.photos.filter((eventPhoto) => eventPhoto.id !== photo.id);
-            persistEvents();
-            renderCurrentEvent();
-            renderEvents();
-        });
-    }
-
-    // Клик по картинке — открыть lightbox
-    const img = item.querySelector('img');
-    if (img) {
-        img.addEventListener('click', () => {
-            const currentEvent = getCurrentEvent();
-            if (!currentEvent) return;
-            const index = currentEvent.photos.findIndex((p) => p.id === photo.id);
-            openLightbox(currentEvent.photos, index);
-        });
-    }
-
-    return item;
-}
-
-function createUserPhotoCard(photo) {
-    const item = document.createElement('article');
-    item.className = 'photo-item';
-
-    // Кнопки показываем только для своих фото
-    const actionsMarkup = photo.ownerType === 'participant'
-        ? `<div class="photo-item__actions">
-               <button class="photo-item__edit" type="button">Редактировать</button>
-               <button class="photo-item__delete" type="button">Удалить</button>
-           </div>`
-        : '';
-
-    item.innerHTML = `
-        <img src="${photo.src}" alt="${photo.name}">
-        ${actionsMarkup}
-        <div class="photo-item__footer">
-            <span class="photo-item__name">${photo.name}</span>
-            <span class="photo-item__status">${photo.ownerType === 'participant' ? 'Ваше фото' : 'Организатор'}</span>
-        </div>
-    `;
-
-    // Редактировать — только для своих
-    const editButton = item.querySelector('.photo-item__edit');
-    if (editButton) {
-        editButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            editExistingPhoto(photo);
-        });
-    }
-
-    // Удалить — только для своих
-    const deleteButton = item.querySelector('.photo-item__delete');
-    if (deleteButton) {
-        deleteButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const currentEvent = getCurrentEvent();
-            if (!currentEvent) return;
-
-            currentEvent.photos = currentEvent.photos.filter((eventPhoto) => eventPhoto.id !== photo.id);
-            persistEvents();
-            renderCurrentEvent();
-            renderUserEvent();
-        });
-    }
-
-    // Клик по картинке — lightbox
-    const img = item.querySelector('img');
-    if (img) {
-        img.addEventListener('click', () => {
-            const currentEvent = getCurrentEvent();
-            if (!currentEvent) return;
-            const index = currentEvent.photos.findIndex((p) => p.id === photo.id);
-            openLightbox(currentEvent.photos, index);
-        });
-    }
-
-    return item;
+    return card;
 }
 
 function renderParticipants(event) {
+    if (!participantsList || !participantsCount) return;
+
+    participantsList.innerHTML = '';
     participantsCount.textContent = String(event.participants.length);
-    participantsList.innerHTML = event.participants.map(createParticipantMarkup).join('');
+
+    event.participants.forEach((participant) => {
+        participantsList.appendChild(createParticipantCard(participant));
+    });
+}
+
+function photoSortValue(photo) {
+    const value = new Date(photo.createdAt).getTime();
+    return Number.isNaN(value) ? 0 : value;
+}
+
+function createPhotoCard(photo, photosForLightbox) {
+    const item = document.createElement('article');
+    const canDelete = Boolean(photo.canDelete);
+    item.className = 'photo-item';
+    item.innerHTML = `
+        <img src="" alt="">
+        ${canDelete ? '<div class="photo-item__actions"><button class="photo-item__delete" type="button">Удалить</button></div>' : ''}
+        <div class="photo-item__footer">
+            <span class="photo-item__name"></span>
+            <span class="photo-item__status"></span>
+        </div>
+    `;
+
+    const img = item.querySelector('img');
+    img.src = photo.src || defaultCover;
+    img.alt = photo.name;
+    item.querySelector('.photo-item__name').textContent = photo.name;
+    item.querySelector('.photo-item__status').textContent = photo.moderationStatus === 'pending'
+        ? 'На модерации'
+        : 'Одобрено';
+
+    const deleteButton = item.querySelector('.photo-item__delete');
+
+    if (deleteButton) {
+        deleteButton.addEventListener('click', async (e) => {
+            e.stopPropagation();
+
+            if (!confirm('Удалить это фото?')) return;
+
+            try {
+                await api.photos.delete(photo.id);
+                await refreshCurrentEvent();
+            } catch (err) {
+                alert(`Не удалось удалить фото: ${err.message}`);
+            }
+        });
+    }
+
+    img.addEventListener('click', () => {
+        const index = photosForLightbox.findIndex((itemPhoto) => itemPhoto.id === photo.id);
+        openLightbox(photosForLightbox, index);
+    });
+
+    return item;
+}
+
+function createUserPhotoCard(photo, photosForLightbox) {
+    const item = document.createElement('article');
+    const canDelete = Boolean(photo.isOwn);
+    item.className = 'photo-item';
+    item.innerHTML = `
+        <img src="" alt="">
+        ${canDelete ? '<div class="photo-item__actions"><button class="photo-item__delete" type="button">Удалить</button></div>' : ''}
+        <div class="photo-item__footer">
+            <span class="photo-item__name"></span>
+            <span class="photo-item__status"></span>
+        </div>
+    `;
+
+    const img = item.querySelector('img');
+    img.src = photo.src || defaultCover;
+    img.alt = photo.name;
+    item.querySelector('.photo-item__name').textContent = photo.name;
+    item.querySelector('.photo-item__status').textContent = photo.isOwn ? 'Ваше фото' : 'Галерея';
+
+    const deleteButton = item.querySelector('.photo-item__delete');
+
+    if (deleteButton) {
+        deleteButton.addEventListener('click', async (e) => {
+            e.stopPropagation();
+
+            if (!confirm('Удалить это фото?')) return;
+
+            try {
+                await api.photos.delete(photo.id);
+                await refreshCurrentEvent();
+            } catch (err) {
+                alert(`Не удалось удалить фото: ${err.message}`);
+            }
+        });
+    }
+
+    img.addEventListener('click', () => {
+        const index = photosForLightbox.findIndex((itemPhoto) => itemPhoto.id === photo.id);
+        openLightbox(photosForLightbox, index);
+    });
+
+    return item;
 }
 
 function renderGallery(event) {
+    if (!photosGrid || !galleryCount || !galleryEmpty) return;
+
     photosGrid.innerHTML = '';
     galleryCount.textContent = String(event.photos.length);
     galleryEmpty.classList.toggle('event-empty-state--hidden', event.photos.length > 0);
 
-    const sorted = [...event.photos].sort((a, b) =>
-        photosSortOrder === 'newest' ? b.id - a.id : a.id - b.id
-    );
+    const sorted = [...event.photos].sort((a, b) => {
+        return photosSortOrder === 'newest'
+            ? photoSortValue(b) - photoSortValue(a)
+            : photoSortValue(a) - photoSortValue(b);
+    });
 
     sorted.forEach((photo) => {
-        photosGrid.appendChild(createPhotoCard(photo));
+        photosGrid.appendChild(createPhotoCard(photo, sorted));
     });
 }
 
 function renderUserGallery(event) {
+    if (!userPhotosGrid || !userGalleryCount || !userGalleryEmpty) return;
+
     userPhotosGrid.innerHTML = '';
     userGalleryCount.textContent = String(event.photos.length);
     userGalleryEmpty.classList.toggle('event-empty-state--hidden', event.photos.length > 0);
 
     event.photos.forEach((photo) => {
-        userPhotosGrid.appendChild(createUserPhotoCard(photo));
+        userPhotosGrid.appendChild(createUserPhotoCard(photo, event.photos));
     });
 }
 
 function setModerationUI(event) {
+    if (!moderationToggle || !moderationStatusText || !moderationPanel) return;
+
+    const organizer = event.accessRole === 'organizer';
+
     moderationToggle.classList.toggle('moderation-toggle--active', event.moderationEnabled);
     moderationToggle.setAttribute('aria-pressed', String(event.moderationEnabled));
+    moderationToggle.disabled = !organizer;
     moderationStatusText.textContent = event.moderationEnabled
         ? 'Новые фото попадают в очередь и ждут одобрения организатора'
         : 'Все новые фото сразу попадают в галерею';
-    moderationPanel.style.display = event.moderationEnabled ? 'block' : 'none';
+    moderationPanel.style.display = organizer && event.moderationEnabled ? 'block' : 'none';
 }
 
 function renderModerationQueue(event) {
+    if (!moderationList || !moderationCount || !moderationEmpty || !moderationPanel) return;
+
     moderationList.innerHTML = '';
     moderationCount.textContent = String(event.pendingPhotos.length);
     moderationEmpty.classList.toggle('event-empty-state--hidden', event.pendingPhotos.length > 0);
     setModerationUI(event);
 
-    if (!event.moderationEnabled) {
+    if (event.accessRole !== 'organizer' || !event.moderationEnabled) {
         return;
     }
 
@@ -646,12 +761,12 @@ function renderModerationQueue(event) {
         card.className = 'moderation-card';
         card.innerHTML = `
             <div class="moderation-card__preview">
-                <img src="${photo.src}" alt="${photo.name}">
+                <img src="" alt="">
             </div>
             <div class="moderation-card__content">
                 <div>
-                    <h3 class="moderation-card__title">${photo.name}</h3>
-                    <p class="moderation-card__meta">Загрузил: ${photo.author}. Ожидает публикации в галерее.</p>
+                    <h3 class="moderation-card__title"></h3>
+                    <p class="moderation-card__meta"></p>
                 </div>
                 <textarea class="moderation-card__comment" placeholder="Комментарий для отклонения или заметка для участника"></textarea>
                 <div class="moderation-card__actions">
@@ -661,52 +776,40 @@ function renderModerationQueue(event) {
             </div>
         `;
 
+        card.querySelector('img').src = photo.src || defaultCover;
+        card.querySelector('img').alt = photo.name;
+        card.querySelector('.moderation-card__title').textContent = photo.name;
+        card.querySelector('.moderation-card__meta').textContent = `Статус: ${photo.moderationStatus}. Ожидает публикации в галерее.`;
+
         const approveButton = card.querySelector('.moderation-card__button--approve');
         const rejectButton = card.querySelector('.moderation-card__button--reject');
         const commentField = card.querySelector('.moderation-card__comment');
 
-        approveButton.addEventListener('click', () => {
-            const currentEvent = getCurrentEvent();
+        approveButton.addEventListener('click', async () => {
+            setControlLoading(approveButton, true, 'Одобряем...');
 
-            if (!currentEvent) {
-                return;
+            try {
+                await api.photos.approve(photo.id, commentField.value.trim() || null);
+                await refreshCurrentEvent();
+            } catch (err) {
+                alert(`Не удалось одобрить фото: ${err.message}`);
+            } finally {
+                setControlLoading(approveButton, false);
             }
-
-            currentEvent.pendingPhotos = currentEvent.pendingPhotos.filter((item) => item.id !== photo.id);
-            currentEvent.photos.unshift({
-                id: photo.id,
-                src: photo.src,
-                name: photo.name,
-                author: photo.author,
-                ownerType: photo.ownerType,
-            });
-
-            if (!currentEvent.cover || currentEvent.cover === defaultCover) {
-                currentEvent.cover = photo.src;
-            }
-
-            persistEvents();
-            renderCurrentEvent();
-            renderUserEvent();
-            renderEvents();
         });
 
-        rejectButton.addEventListener('click', () => {
-            const currentEvent = getCurrentEvent();
+        rejectButton.addEventListener('click', async () => {
+            const comment = commentField.value.trim() || 'Фото отклонено организатором';
+            setControlLoading(rejectButton, true, 'Отклоняем...');
 
-            if (!currentEvent) {
-                return;
+            try {
+                await api.photos.reject(photo.id, comment);
+                await refreshCurrentEvent();
+            } catch (err) {
+                alert(`Не удалось отклонить фото: ${err.message}`);
+            } finally {
+                setControlLoading(rejectButton, false);
             }
-
-            const comment = commentField.value.trim();
-            currentEvent.pendingPhotos = currentEvent.pendingPhotos.filter((item) => item.id !== photo.id);
-
-            if (comment) {
-                currentEvent.lastModerationComment = comment;
-            }
-
-            persistEvents();
-            renderCurrentEvent();
         });
 
         moderationList.appendChild(card);
@@ -726,7 +829,14 @@ function renderCurrentEvent() {
     eventPlaceBadge.textContent = event.place || 'Место не указано';
     eventDescription.textContent = event.description || 'Описание мероприятия пока не заполнено.';
 
+    const organizer = event.accessRole === 'organizer';
+    deleteEventBtn.style.display = organizer ? '' : 'none';
+    openParticipantViewBtn.style.display = organizer ? '' : 'none';
+    adminAddPhotoBtn.style.display = organizer ? '' : 'none';
+
+    renderParticipants(event);
     renderGallery(event);
+    renderModerationQueue(event);
 }
 
 function renderUserEvent() {
@@ -744,36 +854,198 @@ function renderUserEvent() {
     renderUserGallery(event);
 }
 
-function openEvent(eventId) {
+async function openEvent(eventId) {
     currentEventId = eventId;
-    renderCurrentEvent();
     viewList.classList.add('view--hidden');
     viewUserEvent.classList.add('view--hidden');
     viewEvent.classList.remove('view--hidden');
+
+    const existing = getCurrentEvent();
+    if (existing) {
+        renderCurrentEvent();
+    }
+
+    try {
+        await refreshCurrentEvent();
+    } catch (err) {
+        alert(`Не удалось открыть мероприятие: ${err.message}`);
+    }
 }
 
-function openUserEvent(eventId) {
+async function openUserEvent(eventId) {
     currentEventId = eventId;
-    renderUserEvent();
     viewList.classList.add('view--hidden');
     viewEvent.classList.add('view--hidden');
     viewUserEvent.classList.remove('view--hidden');
+
+    const existing = getCurrentEvent();
+    if (existing) {
+        renderUserEvent();
+    }
+
+    try {
+        await refreshCurrentEvent();
+    } catch (err) {
+        alert(`Не удалось открыть мероприятие: ${err.message}`);
+    }
 }
 
-function deleteCurrentEvent() {
-    const index = events.findIndex((event) => event.id === currentEventId);
+async function deleteCurrentEvent() {
+    const event = getCurrentEvent();
 
-    if (index === -1) {
+    if (!event) {
         return;
     }
 
-    events.splice(index, 1);
-    persistEvents();
+    await api.events.delete(event.id);
     currentEventId = null;
     viewEvent.classList.add('view--hidden');
     viewUserEvent.classList.add('view--hidden');
     viewList.classList.remove('view--hidden');
-    renderEvents();
+    await loadEventsFromBackend();
+}
+
+function extractQrToken(value) {
+    const trimmed = (value || '').trim();
+
+    if (!trimmed) {
+        return '';
+    }
+
+    try {
+        const url = new URL(trimmed, window.location.href);
+        const token = url.searchParams.get('qr_token') || url.searchParams.get('token');
+
+        if (token) {
+            return token;
+        }
+
+        const parts = url.pathname.split('/').filter(Boolean);
+        return parts[parts.length - 1] || trimmed;
+    } catch (err) {
+        return trimmed.split('/').filter(Boolean).pop() || trimmed;
+    }
+}
+
+function getQrTokenFromLocation() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('qr_token') || params.get('token') || '';
+}
+
+function clearJoinTokenFromLocation() {
+    if (!window.history?.replaceState) {
+        return;
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete('qr_token');
+    url.searchParams.delete('token');
+    window.history.replaceState(null, '', url.toString());
+}
+
+function buildFrontendJoinUrl(qrToken) {
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.hash = '';
+    url.searchParams.set('qr_token', qrToken);
+    return url.toString();
+}
+
+async function joinByQrToken(qrToken) {
+    const response = await api.events.join(qrToken);
+    const event = upsertEvent(response.event);
+    await loadEventsFromBackend();
+    await openUserEvent(event.id);
+    return response;
+}
+
+async function joinFromLocationIfNeeded() {
+    const qrToken = getQrTokenFromLocation();
+
+    if (!qrToken || handledJoinToken === qrToken || !auth.isLoggedIn()) {
+        return;
+    }
+
+    handledJoinToken = qrToken;
+
+    try {
+        await joinByQrToken(qrToken);
+        clearJoinTokenFromLocation();
+    } catch (err) {
+        alert(`Не удалось присоединиться к мероприятию: ${err.message}`);
+    }
+}
+
+async function openQrModal(event) {
+    try {
+        const joinData = await api.events.joinLink(event.id);
+        const link = buildFrontendJoinUrl(joinData.qr_token);
+
+        eventQrContainer.innerHTML = '';
+        new QRCode(eventQrContainer, {
+            text: link,
+            width: 188,
+            height: 188,
+            colorDark: '#111827',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M,
+        });
+
+        if (eventQrValue) {
+            eventQrValue.textContent = link;
+        }
+
+        qrModal.classList.add('active');
+    } catch (err) {
+        alert(`Не удалось получить QR-ссылку: ${err.message}`);
+    }
+}
+
+function openMobileSidebar() {
+    sidebar?.classList.add('sidebar--mobile-open');
+    sidebarOverlay?.classList.add('active');
+}
+
+function closeMobileSidebar() {
+    sidebar?.classList.remove('sidebar--mobile-open');
+    sidebarOverlay?.classList.remove('active');
+}
+
+function openLightbox(photos, startIndex) {
+    if (!photos || photos.length === 0) return;
+
+    lightboxPhotos = photos;
+    lightboxIndex = Math.max(0, startIndex);
+    lightbox.classList.toggle('lightbox--single', photos.length <= 1);
+    lightbox.classList.add('active');
+    showLightboxPhoto();
+}
+
+function closeLightbox() {
+    lightbox.classList.remove('active');
+    lightboxImage.src = '';
+    lightboxPhotos = [];
+}
+
+function showLightboxPhoto() {
+    const photo = lightboxPhotos[lightboxIndex];
+    if (!photo) return;
+
+    lightboxImage.src = photo.src || defaultCover;
+    lightboxImage.alt = photo.name;
+    lightboxCaption.textContent = `${photo.name} — ${lightboxIndex + 1} из ${lightboxPhotos.length}`;
+}
+
+function lightboxGoPrev() {
+    if (lightboxPhotos.length <= 1) return;
+    lightboxIndex = (lightboxIndex - 1 + lightboxPhotos.length) % lightboxPhotos.length;
+    showLightboxPhoto();
+}
+
+function lightboxGoNext() {
+    if (lightboxPhotos.length <= 1) return;
+    lightboxIndex = (lightboxIndex + 1) % lightboxPhotos.length;
+    showLightboxPhoto();
 }
 
 if (toggleBtn) {
@@ -828,16 +1100,28 @@ if (joinModal) {
 }
 
 if (joinEventForm) {
-    joinEventForm.addEventListener('submit', (event) => {
+    joinEventForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        const joinedEvent = createJoinedEvent(joinEventCode.value, joinEventName.value);
-        events.push(joinedEvent);
-        persistEvents();
-        renderEvents();
-        joinEventForm.reset();
-        joinModal.classList.remove('active');
-        openUserEvent(joinedEvent.id);
+        const qrToken = extractQrToken(joinEventCode.value);
+        const submitButton = joinEventForm.querySelector('button[type="submit"]');
+
+        if (!qrToken) {
+            alert('Введите код или ссылку мероприятия');
+            return;
+        }
+
+        setControlLoading(submitButton, true, 'Добавляем...');
+
+        try {
+            await joinByQrToken(qrToken);
+            joinEventForm.reset();
+            joinModal.classList.remove('active');
+        } catch (err) {
+            alert(`Не удалось добавить мероприятие: ${err.message}`);
+        } finally {
+            setControlLoading(submitButton, false);
+        }
     });
 }
 
@@ -856,25 +1140,29 @@ if (createCoverInput) {
 if (createForm) {
     createForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+
+        const submitButton = createForm.querySelector('button[type="submit"]');
         const inputs = createForm.querySelectorAll('.create-modal__input');
-        const newEvent = createEventFromForm(inputs);
 
-        // Конвертируем обложку в base64 если выбрана
-        if (selectedCreateCoverFile) {
-            try {
-                newEvent.cover = await fileToBase64(selectedCreateCoverFile);
-            } catch (err) {
-                console.error('Ошибка чтения обложки:', err);
-                newEvent.cover = defaultCover;
+        setControlLoading(submitButton, true, 'Создаем...');
+
+        try {
+            let rawEvent = await api.events.create(eventPayloadFromForm(inputs));
+
+            if (selectedCreateCoverFile) {
+                rawEvent = await uploadCover(rawEvent.id, selectedCreateCoverFile);
             }
-        }
 
-        events.push(newEvent);
-        persistEvents();
-        renderEvents();
-        resetCreateModal();
-        createModal.classList.remove('active');
-        openEvent(newEvent.id);
+            const newEvent = upsertEvent(rawEvent);
+            await loadEventsFromBackend();
+            resetCreateModal();
+            createModal.classList.remove('active');
+            await openEvent(newEvent.id);
+        } catch (err) {
+            alert(`Не удалось создать мероприятие: ${err.message}`);
+        } finally {
+            setControlLoading(submitButton, false);
+        }
     });
 }
 
@@ -884,6 +1172,7 @@ if (backToList) {
         viewUserEvent.classList.add('view--hidden');
         viewList.classList.remove('view--hidden');
         currentEventId = null;
+        loadEventsFromBackend();
     });
 }
 
@@ -895,29 +1184,16 @@ if (backToAdminView) {
             return;
         }
 
-        openEvent(currentEvent.id);
-    });
-}
+        if (currentEvent.accessRole === 'organizer') {
+            openEvent(currentEvent.id);
+            return;
+        }
 
-const showQrBtn = document.getElementById('showQrBtn');
-const qrModal = document.getElementById('qrModal');
-const closeQrModal = document.getElementById('closeQrModal');
-const copyQrLinkBtn = document.getElementById('copyQrLinkBtn');
-const eventQrContainer = document.getElementById('eventQrContainer');
-
-function openQrModal(event) {
-    const link = event.qrValue || '';
-    eventQrContainer.innerHTML = '';
-    new QRCode(eventQrContainer, {
-        text: link || 'eventsnap',
-        width: 188,
-        height: 188,
-        colorDark: '#111827',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.M,
+        viewEvent.classList.add('view--hidden');
+        viewUserEvent.classList.add('view--hidden');
+        viewList.classList.remove('view--hidden');
+        currentEventId = null;
     });
-    if (eventQrValue) eventQrValue.textContent = link;
-    qrModal.classList.add('active');
 }
 
 if (showQrBtn) {
@@ -942,10 +1218,21 @@ if (qrModal) {
 if (copyQrLinkBtn) {
     copyQrLinkBtn.addEventListener('click', () => {
         const link = eventQrValue?.textContent || '';
-        navigator.clipboard.writeText(link).then(() => {
-            copyQrLinkBtn.textContent = 'Скопировано!';
-            setTimeout(() => { copyQrLinkBtn.textContent = 'Скопировать ссылку'; }, 1800);
-        });
+
+        if (!link) {
+            return;
+        }
+
+        navigator.clipboard?.writeText(link)
+            .then(() => {
+                copyQrLinkBtn.textContent = 'Скопировано!';
+                setTimeout(() => {
+                    copyQrLinkBtn.textContent = 'Скопировать ссылку';
+                }, 1800);
+            })
+            .catch(() => {
+                prompt('Скопируйте ссылку', link);
+            });
     });
 }
 
@@ -1010,77 +1297,70 @@ if (addPhotoForm) {
             return;
         }
 
-        // Блокируем кнопку на время загрузки
-        savePhotoBtn.disabled = true;
-        savePhotoBtn.textContent = 'Загрузка...';
+        setControlLoading(savePhotoBtn, true, 'Загрузка...');
 
         try {
-            // Читаем все файлы параллельно в base64
-            const base64Results = await Promise.all(
-                selectedPhotoFiles.map((file) => fileToBase64(file))
-            );
-
-            const newPhotos = selectedPhotoFiles.map((file, index) => ({
-                id: Date.now() + index,
-                src: base64Results[index],
-                name: file.name,
-                author: uploadContext === 'participant' ? participantName : organizerName,
-                ownerType: uploadContext === 'participant' ? 'participant' : 'organizer',
-            }));
-
-            if (currentEvent.moderationEnabled) {
-                currentEvent.pendingPhotos.unshift(...newPhotos);
-            } else {
-                currentEvent.photos.unshift(...newPhotos);
-
+            for (const file of selectedPhotoFiles) {
+                await uploadPhoto(currentEvent, file);
             }
 
-            persistEvents();
-            renderCurrentEvent();
-            renderUserEvent();
-            renderEvents();
+            await refreshCurrentEvent();
             closeUploadModal();
         } catch (err) {
             console.error('Ошибка загрузки фото:', err);
-            alert('Не удалось загрузить фото. Попробуйте ещё раз.');
+            alert(`Не удалось загрузить фото: ${err.message}`);
         } finally {
-            // Возвращаем кнопку в исходное состояние
-            savePhotoBtn.disabled = false;
-            savePhotoBtn.textContent = 'Добавить фотографии';
+            setControlLoading(savePhotoBtn, false);
+            updateAddPhotoModalState();
         }
     });
 }
 
 if (moderationToggle) {
-    moderationToggle.addEventListener('click', () => {
+    moderationToggle.addEventListener('click', async () => {
         const currentEvent = getCurrentEvent();
 
-        if (!currentEvent) {
+        if (!currentEvent || currentEvent.accessRole !== 'organizer') {
             return;
         }
 
-        currentEvent.moderationEnabled = !currentEvent.moderationEnabled;
-        persistEvents();
-        renderCurrentEvent();
+        moderationToggle.disabled = true;
+
+        try {
+            const gallery = await api.gallery.update(currentEvent.id, {
+                moderation_enabled: !currentEvent.moderationEnabled,
+            });
+            currentEvent.moderationEnabled = Boolean(gallery.moderation_enabled);
+            await refreshCurrentEvent();
+        } catch (err) {
+            alert(`Не удалось обновить настройки галереи: ${err.message}`);
+        } finally {
+            moderationToggle.disabled = false;
+        }
     });
 }
 
 if (deleteEventBtn) {
-    deleteEventBtn.addEventListener('click', () => {
+    deleteEventBtn.addEventListener('click', async () => {
         const currentEvent = getCurrentEvent();
         if (!currentEvent) return;
         if (!confirm(`Удалить мероприятие «${currentEvent.name}»? Это действие нельзя отменить.`)) return;
-        deleteCurrentEvent();
+
+        try {
+            await deleteCurrentEvent();
+        } catch (err) {
+            alert(`Не удалось удалить мероприятие: ${err.message}`);
+        }
     });
 }
 
-const fileBtn = document.querySelector('.sidebar__btn--file');
 if (fileBtn) {
     fileBtn.addEventListener('click', () => {
         viewEvent?.classList.add('view--hidden');
         viewUserEvent?.classList.add('view--hidden');
         viewList?.classList.remove('view--hidden');
         currentEventId = null;
+        loadEventsFromBackend();
     });
 }
 
@@ -1092,20 +1372,20 @@ if (openModalBtn) {
 
 if (closeModalBtn) {
     closeModalBtn.addEventListener('click', () => {
-        modal.classList.remove('active');
-    });
-}
-
-if (modal) {
-    modal.addEventListener('click', (event) => {
-        if (event.target === modal) {
+        if (!isGateActive()) {
             modal.classList.remove('active');
         }
     });
 }
 
-// ===== Сортировка галереи =====
-const gallerySort = document.getElementById('gallerySort');
+if (modal) {
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal && !isGateActive()) {
+            modal.classList.remove('active');
+        }
+    });
+}
+
 if (gallerySort) {
     gallerySort.addEventListener('click', (e) => {
         const btn = e.target.closest('.gallery-sort__btn');
@@ -1113,26 +1393,12 @@ if (gallerySort) {
         const order = btn.dataset.sort;
         if (order === photosSortOrder) return;
         photosSortOrder = order;
-        gallerySort.querySelectorAll('.gallery-sort__btn').forEach((b) => {
-            b.classList.toggle('gallery-sort__btn--active', b.dataset.sort === order);
+        gallerySort.querySelectorAll('.gallery-sort__btn').forEach((button) => {
+            button.classList.toggle('gallery-sort__btn--active', button.dataset.sort === order);
         });
         const currentEvent = getCurrentEvent();
         if (currentEvent) renderGallery(currentEvent);
     });
-}
-
-// ===== Мобильный бургер =====
-const mobileBurger = document.getElementById('mobileBurger');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-function openMobileSidebar() {
-    sidebar.classList.add('sidebar--mobile-open');
-    sidebarOverlay.classList.add('active');
-}
-
-function closeMobileSidebar() {
-    sidebar.classList.remove('sidebar--mobile-open');
-    sidebarOverlay.classList.remove('active');
 }
 
 if (mobileBurger) {
@@ -1147,33 +1413,22 @@ if (toggleBtn) {
     toggleBtn.addEventListener('click', closeMobileSidebar);
 }
 
-setSidebarButtonLabels();
-renderEvents();
-
-// ===== Модалка входа =====
-const loginModal = document.getElementById('loginModal');
-const closeLoginModalBtn = document.getElementById('closeLoginModal');
-const switchToRegisterLink = document.getElementById('switchToRegister');
-const switchToLoginLink = document.getElementById('switchToLogin');
-
-
-// Закрыть модалку входа по стрелке назад
 if (closeLoginModalBtn) {
     closeLoginModalBtn.addEventListener('click', () => {
-        loginModal.classList.remove('active');
-    });
-}
-
-// Закрыть модалку входа по клику на затемнение
-if (loginModal) {
-    loginModal.addEventListener('click', (e) => {
-        if (e.target === loginModal) {
+        if (!isGateActive()) {
             loginModal.classList.remove('active');
         }
     });
 }
 
-// Переключение "Вход" -> "Регистрация"
+if (loginModal) {
+    loginModal.addEventListener('click', (e) => {
+        if (e.target === loginModal && !isGateActive()) {
+            loginModal.classList.remove('active');
+        }
+    });
+}
+
 if (switchToRegisterLink) {
     switchToRegisterLink.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1182,63 +1437,12 @@ if (switchToRegisterLink) {
     });
 }
 
-// Переключение "Регистрация" -> "Вход"
 if (switchToLoginLink) {
     switchToLoginLink.addEventListener('click', (e) => {
         e.preventDefault();
         modal.classList.remove('active');
         loginModal.classList.add('active');
     });
-}
-
-// ===== Lightbox (просмотр фото в полный экран) =====
-const lightbox = document.getElementById('lightbox');
-const lightboxImage = document.getElementById('lightboxImage');
-const lightboxCaption = document.getElementById('lightboxCaption');
-const lightboxClose = document.getElementById('lightboxClose');
-const lightboxPrev = document.getElementById('lightboxPrev');
-const lightboxNext = document.getElementById('lightboxNext');
-
-let lightboxPhotos = [];
-let lightboxIndex = 0;
-
-function openLightbox(photos, startIndex) {
-    if (!photos || photos.length === 0) return;
-
-    lightboxPhotos = photos;
-    lightboxIndex = startIndex;
-
-    // Если фото только одно — скрываем стрелки
-    lightbox.classList.toggle('lightbox--single', photos.length <= 1);
-    lightbox.classList.add('active');
-    showLightboxPhoto();
-}
-
-function closeLightbox() {
-    lightbox.classList.remove('active');
-    lightboxImage.src = '';
-    lightboxPhotos = [];
-}
-
-function showLightboxPhoto() {
-    const photo = lightboxPhotos[lightboxIndex];
-    if (!photo) return;
-
-    lightboxImage.src = photo.src;
-    lightboxImage.alt = photo.name;
-    lightboxCaption.textContent = `${photo.name} — ${lightboxIndex + 1} из ${lightboxPhotos.length}`;
-}
-
-function lightboxGoPrev() {
-    if (lightboxPhotos.length <= 1) return;
-    lightboxIndex = (lightboxIndex - 1 + lightboxPhotos.length) % lightboxPhotos.length;
-    showLightboxPhoto();
-}
-
-function lightboxGoNext() {
-    if (lightboxPhotos.length <= 1) return;
-    lightboxIndex = (lightboxIndex + 1) % lightboxPhotos.length;
-    showLightboxPhoto();
 }
 
 if (lightboxClose) {
@@ -1253,7 +1457,6 @@ if (lightboxNext) {
     lightboxNext.addEventListener('click', lightboxGoNext);
 }
 
-// Клик по фону закрывает
 if (lightbox) {
     lightbox.addEventListener('click', (e) => {
         if (e.target === lightbox) {
@@ -1262,11 +1465,35 @@ if (lightbox) {
     });
 }
 
-// Клавиатура: Esc, стрелки
 document.addEventListener('keydown', (e) => {
     if (!lightbox.classList.contains('active')) return;
 
     if (e.key === 'Escape') closeLightbox();
     if (e.key === 'ArrowLeft') lightboxGoPrev();
     if (e.key === 'ArrowRight') lightboxGoNext();
+});
+
+window.addEventListener('eventsnap:auth-changed', async () => {
+    if (!auth.isLoggedIn()) {
+        events = [];
+        currentEventId = null;
+        renderEvents();
+        return;
+    }
+
+    await joinFromLocationIfNeeded();
+
+    if (!currentEventId) {
+        await loadEventsFromBackend();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    setSidebarButtonLabels();
+    renderEvents();
+
+    if (auth.isLoggedIn()) {
+        await joinFromLocationIfNeeded();
+        await loadEventsFromBackend();
+    }
 });
