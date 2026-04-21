@@ -258,12 +258,26 @@ const imageEditor = {
         this.filterPreviewCanvas.width = Math.round(src.width * scale);
         this.filterPreviewCanvas.height = Math.round(src.height * scale);
 
+        const previewSource = document.createElement('canvas');
+        previewSource.width = this.filterPreviewCanvas.width;
+        previewSource.height = this.filterPreviewCanvas.height;
+        const previewSourceCtx = previewSource.getContext('2d');
+        previewSourceCtx.drawImage(
+            src,
+            0,
+            0,
+            this.filterPreviewCanvas.width,
+            this.filterPreviewCanvas.height
+        );
+
         const ctx = this.filterPreviewCanvas.getContext('2d');
-        const filter = getFilterById(this._selectedFilterId);
-        ctx.filter = filter.css(this._filterIntensity);
         ctx.clearRect(0, 0, this.filterPreviewCanvas.width, this.filterPreviewCanvas.height);
-        ctx.drawImage(src, 0, 0, this.filterPreviewCanvas.width, this.filterPreviewCanvas.height);
-        ctx.filter = 'none';
+        const filteredPreview = applyFilterToCanvas(
+            previewSource,
+            this._selectedFilterId,
+            this._filterIntensity
+        );
+        ctx.drawImage(filteredPreview, 0, 0);
     },
 
     _apply() {

@@ -79,59 +79,6 @@ body {
     background: #7f858c;
 }
 
-/* Разделитель */
-.modal__divider {
-    height: 1px;
-    background: #d1d5db;
-    margin: 28px 0;
-}
-
-/* Кнопка Яндекса */
-.yandex-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center; /* центрируем всё */
-    gap: 12px;
-
-    height: 56px;
-    width: 100%;
-
-    border-radius: 28px;
-    background: #000;
-    border: none;
-
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.yandex-btn:hover {
-    background: #1a1a1a;
-    transform: translateY(-1px);
-}
-
-/* Красный кружок */
-.yandex-btn__icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #ff3b30;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    color: #fff;
-    font-weight: 800;
-    font-size: 18px;
-}
-
-/* Текст */
-.yandex-btn__text {
-    color: #fff;
-    font-size: 17px;
-    font-weight: 500;
-}
-
 /* Анимация */
 @keyframes fadeIn {
     from {
@@ -142,23 +89,6 @@ body {
         transform: translateY(0);
         opacity: 1;
     }
-}
-
-.yandex-btn__icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #fff; /* фон как у оригинала */
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* сама иконка */
-.yandex-btn__icon img {
-    width: 20px;
-    height: 20px;
 }
 
 /* скрыта по умолчанию */
@@ -189,4 +119,3 @@ body {
 .modal__switch a:hover {
     text-decoration: underline;
 }
-
