@@ -55,6 +55,7 @@
 .sidebar__btn--hide {
     width: 104px; height: 52px;
     padding: 8px 26px; box-sizing: border-box;
+    margin-top: auto;
     margin-bottom: 54px;
 }
 
@@ -188,6 +189,7 @@
     box-sizing: border-box;
     justify-content: flex-start;
     gap: 8px;
+    margin-top: auto;
     margin-bottom: 54px;
     background: hsla(0, 0%, 100%, 1);
 }

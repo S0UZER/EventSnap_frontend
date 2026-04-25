@@ -67,6 +67,8 @@ function openAuthGate() {
     if (closeBtn) {
         closeBtn.style.display = 'none';
     }
+
+    history.replaceState(null, '', '#login');
 }
 
 function closeAuthGate() {
@@ -77,6 +79,10 @@ function closeAuthGate() {
     const closeBtn = document.getElementById('closeLoginModal');
     if (closeBtn) {
         closeBtn.style.display = '';
+    }
+
+    if (window.location.hash === '#login') {
+        history.replaceState(null, '', '#home');
     }
 }
 

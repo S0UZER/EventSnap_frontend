@@ -11,10 +11,8 @@
     <link rel="stylesheet" href="./css/create_event.css">
     <link rel="stylesheet" href="./css/events.css">
     <link rel="stylesheet" href="./css/lightbox.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     <link rel="stylesheet" href="./css/editor.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
     <script src="./scripts/config.js" defer></script>
     <script src="./scripts/api.js" defer></script>
     <script src="./scripts/auth.js" defer></script>
@@ -56,10 +54,7 @@
         <img src="./img/main_page/folderbtn.svg" alt="Мероприятия">
         <span class="sidebar__label">Мероприятия</span>
     </button>
-    <button class="sidebar__btn sidebar__btn--rubbish">
-        <img src="./img/main_page/btn_rub1.svg" alt="Корзина">
-        <span class="sidebar__label">Корзина</span>
-    </button>
+
     <button class="sidebar__btn sidebar__btn--hide" id="sidebarToggle">
         <img src="./img/main_page/btn_hide.svg" alt="Свернуть">
         <span class="sidebar__label">Свернуть меню</span>
@@ -369,7 +364,7 @@
         <!-- Шаг 1: Обрезка -->
         <div class="editor-modal__step" id="editorCropStep">
             <div class="editor-modal__canvas">
-                <img id="editorImage" src="" alt="Редактируемое изображение">
+                <canvas id="editorImage"></canvas>
             </div>
 
             <div class="editor-modal__controls">

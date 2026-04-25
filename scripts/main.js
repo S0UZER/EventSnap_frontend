@@ -854,7 +854,10 @@ function renderUserEvent() {
     renderUserGallery(event);
 }
 
-async function openEvent(eventId) {
+async function openEvent(eventId, { addHistory = true } = {}) {
+    if (addHistory) {
+        history.pushState(null, '', `#event/${eventId}`);
+    }
     currentEventId = eventId;
     viewList.classList.add('view--hidden');
     viewUserEvent.classList.add('view--hidden');
@@ -872,7 +875,10 @@ async function openEvent(eventId) {
     }
 }
 
-async function openUserEvent(eventId) {
+async function openUserEvent(eventId, { addHistory = true } = {}) {
+    if (addHistory) {
+        history.pushState(null, '', `#event/${eventId}/participant`);
+    }
     currentEventId = eventId;
     viewList.classList.add('view--hidden');
     viewEvent.classList.add('view--hidden');
@@ -1168,6 +1174,7 @@ if (createForm) {
 
 if (backToList) {
     backToList.addEventListener('click', () => {
+        history.pushState(null, '', '#home');
         viewEvent.classList.add('view--hidden');
         viewUserEvent.classList.add('view--hidden');
         viewList.classList.remove('view--hidden');
@@ -1189,6 +1196,7 @@ if (backToAdminView) {
             return;
         }
 
+        history.pushState(null, '', '#home');
         viewEvent.classList.add('view--hidden');
         viewUserEvent.classList.add('view--hidden');
         viewList.classList.remove('view--hidden');
@@ -1356,6 +1364,7 @@ if (deleteEventBtn) {
 
 if (fileBtn) {
     fileBtn.addEventListener('click', () => {
+        history.pushState(null, '', '#home');
         viewEvent?.classList.add('view--hidden');
         viewUserEvent?.classList.add('view--hidden');
         viewList?.classList.remove('view--hidden');
@@ -1473,6 +1482,35 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') lightboxGoNext();
 });
 
+function parseRoute() {
+    const hash = window.location.hash.replace(/^#\/?/, '');
+    if (!hash || hash === 'home') return { page: 'home' };
+    if (hash === 'login') return { page: 'login' };
+    const parts = hash.split('/');
+    if (parts[0] === 'event' && parts[1]) {
+        return parts[2] === 'participant'
+            ? { page: 'user-event', id: parts[1] }
+            : { page: 'event', id: parts[1] };
+    }
+    return { page: 'home' };
+}
+
+window.addEventListener('popstate', async () => {
+    if (!auth.isLoggedIn()) return;
+    const route = parseRoute();
+    if (route.page === 'event') {
+        await openEvent(route.id, { addHistory: false });
+    } else if (route.page === 'user-event') {
+        await openUserEvent(route.id, { addHistory: false });
+    } else {
+        viewEvent?.classList.add('view--hidden');
+        viewUserEvent?.classList.add('view--hidden');
+        viewList?.classList.remove('view--hidden');
+        currentEventId = null;
+        await loadEventsFromBackend();
+    }
+});
+
 window.addEventListener('eventsnap:auth-changed', async () => {
     if (!auth.isLoggedIn()) {
         events = [];
@@ -1492,8 +1530,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     setSidebarButtonLabels();
     renderEvents();
 
+    if (!window.location.hash) {
+        history.replaceState(null, '', '#home');
+    }
+
     if (auth.isLoggedIn()) {
         await joinFromLocationIfNeeded();
         await loadEventsFromBackend();
+
+        const route = parseRoute();
+        if (route.page === 'event') {
+            await openEvent(route.id, { addHistory: false });
+        } else if (route.page === 'user-event') {
+            await openUserEvent(route.id, { addHistory: false });
+        }
     }
 });
