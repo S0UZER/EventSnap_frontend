@@ -1,12 +1,14 @@
 .sidebar {
     width: 104px;
-    height: 100vh;
+    height: 100dvh;
     border-right: 1px solid hsla(200, 31%, 94%, 1);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
     transition: width 0.25s ease;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ===== LOGO (collapsed) ===== */

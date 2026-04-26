@@ -14,7 +14,9 @@
 }
 
 .create-modal {
-    width: 360px;
+    width: min(360px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
     background: #fff;
     border-radius: 24px;
     padding: 32px 24px 28px;
@@ -61,7 +63,7 @@
     border-bottom: 1.5px solid #c5b8e8;
     outline: none;
     padding: 8px 0;
-    font-size: 14px;
+    font-size: 16px; /* >= 16px prevents iOS auto-zoom */
     font-family: "Wix Madefor Display", sans-serif;
     color: #1a1d2e;
     background: transparent;
@@ -180,7 +182,9 @@
 
 /* Upload modal */
 .upload-modal {
-    width: 420px;
+    width: min(420px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
     background: #fff;
     border-radius: 24px;
     padding: 28px 24px 24px;

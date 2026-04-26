@@ -1,6 +1,6 @@
 body {
     display: flex;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
@@ -718,7 +718,7 @@ body {
     box-sizing: border-box;
     resize: vertical;
     font-family: "Wix Madefor Display", sans-serif;
-    font-size: 14px;
+    font-size: 16px; /* >= 16px prevents iOS auto-zoom */
     color: #1a1d2e;
     outline: none;
 }
@@ -968,7 +968,9 @@ body {
 }
 
 .qr-modal {
-    width: 340px;
+    width: min(340px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
     background: #fff;
     border-radius: 28px;
     padding: 32px 28px 28px;
@@ -1004,35 +1006,3 @@ body {
     font-family: "Wix Madefor Display", sans-serif;
 }
 
-@media (max-width: 1100px) {
-    .event-hero,
-    .event-dashboard,
-    .user-event-hero {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 720px) {
-    .main-header,
-    .event-shell,
-    .event-dashboard,
-    .events-grid,
-    .user-event-shell {
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-
-    .event-hero__content,
-    .event-panel,
-    .user-event-hero__content {
-        padding: 20px;
-    }
-
-    .moderation-card {
-        grid-template-columns: 1fr;
-    }
-
-    .moderation-card__preview {
-        height: 220px;
-    }
-}

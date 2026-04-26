@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
     <title>EventSnap | Home</title>
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/sidebar.css">
@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="./css/events.css">
     <link rel="stylesheet" href="./css/lightbox.css">
     <link rel="stylesheet" href="./css/editor.css">
+    <link rel="stylesheet" href="./css/responsive.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="./scripts/config.js" defer></script>
     <script src="./scripts/api.js" defer></script>
@@ -60,120 +61,122 @@
         <span class="sidebar__label">Свернуть меню</span>
     </button>
 
-    <div class="modal" id="createModal">
-        <div class="modal__content create-modal">
-            <div class="create-modal__header">
-                <button class="create-modal__back" id="closeCreateModal">&#8592;</button>
-                <h2 class="create-modal__title">Создать мероприятие</h2>
-            </div>
-
-            <form class="create-modal__form">
-                <input class="create-modal__input" type="text" placeholder="Введите название">
-                <textarea class="create-modal__input create-modal__textarea" placeholder="Введите описание"></textarea>
-                <input class="create-modal__input" type="text" placeholder="Введите место проведения">
-                <input class="create-modal__input" type="date">
-                <div class="create-cover">
-                    <p class="create-cover__label">Обложка мероприятия</p>
-                    <input type="file" id="createCoverInput" accept=".jpg,.jpeg,.png" hidden>
-                    <button type="button" class="create-cover__picker" id="selectCreateCoverBtn">
-                        <span class="create-cover__picker-icon">+</span>
-                        <span class="create-cover__picker-text">Добавить фото для обложки</span>
-                    </button>
-                    <div class="create-cover__preview create-cover__preview--hidden" id="createCoverPreviewWrap">
-                        <img id="createCoverPreview" src="" alt="Предпросмотр обложки">
-                    </div>
-                    <div class="create-cover__file create-cover__file--hidden" id="createCoverFileName"></div>
-                </div>
-                <button type="submit" class="create-modal__submit">Создать</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="modal" id="addPhotoModal">
-        <div class="modal__content upload-modal">
-            <div class="upload-modal__header">
-                <button class="upload-modal__back" id="closeAddPhotoModal">&#8592;</button>
-                <h2 class="upload-modal__title">Добавить фото</h2>
-            </div>
-
-            <form class="upload-modal__form" id="addPhotoForm">
-                <p class="upload-modal__hint" id="addPhotoHint">
-                    Выберите изображение, чтобы добавить его в текущее мероприятие
-                </p>
-
-                <input type="file" id="addPhotoInput" accept=".jpg,.jpeg,.png" multiple hidden>
-
-                <button type="button" class="upload-modal__dropzone" id="selectPhotoBtn">
-                    <span class="upload-modal__dropzone-icon">+</span>
-                    <span class="upload-modal__dropzone-text">Нажмите, чтобы выбрать фото</span>
-                    <span class="upload-modal__dropzone-subtext">Поддерживаются JPG и PNG</span>
-                </button>
-
-                <div class="upload-modal__preview upload-modal__preview--hidden" id="photoPreviewWrap">
-                    <img id="photoPreview" src="" alt="Предпросмотр фото">
-                </div>
-
-                <div class="upload-modal__file upload-modal__file--hidden" id="selectedPhotoName"></div>
-
-                <button type="submit" class="upload-modal__submit" id="savePhotoBtn">Добавить на экран</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="modal" id="joinModal">
-        <div class="modal__content create-modal">
-            <div class="create-modal__header">
-                <button class="create-modal__back" id="closeJoinModal">&#8592;</button>
-                <h2 class="create-modal__title">Добавить мероприятие</h2>
-            </div>
-
-            <form class="create-modal__form" id="joinEventForm">
-                <input class="create-modal__input" type="text" id="joinEventCode" placeholder="Введите код или ссылку мероприятия">
-                <input class="create-modal__input" type="text" id="joinEventName" placeholder="Название подтянется с сервера" disabled>
-                <button type="submit" class="create-modal__submit">Добавить в список</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="modal" id="modal">
-        <div class="modal__content">
-            <button class="modal__back" id="closeModal">&#8592;</button>
-
-            <h2 class="modal__title">Зарегистрироваться</h2>
-
-            <form class="modal__form">
-                <input type="email" placeholder="Введите e-mail" required>
-                <input type="password" placeholder="Введите пароль" minlength="8" required>
-                <input type="password" placeholder="Повторно введите пароль" minlength="8" required>
-
-                <button type="submit" class="modal__submit">Зарегистрироваться</button>
-            </form>
-            <p class="modal__switch">
-                Уже есть аккаунт?
-                <a href="#" id="switchToLogin">Войти</a>
-            </p>
-        </div>
-    </div>
-    <div class="modal" id="loginModal">
-        <div class="modal__content">
-            <button class="modal__back" id="closeLoginModal">&#8592;</button>
-
-            <h2 class="modal__title">Войти</h2>
-
-            <form class="modal__form" id="loginForm">
-                <input type="email" placeholder="Введите e-mail" required>
-                <input type="password" placeholder="Введите пароль" required>
-
-                <button type="submit" class="modal__submit">Войти</button>
-            </form>
-
-            <p class="modal__switch">
-                Нет аккаунта?
-                <a href="#" id="switchToRegister">Зарегистрироваться</a>
-            </p>
-        </div>
-    </div>
 </aside>
+
+<div class="modal" id="createModal">
+    <div class="modal__content create-modal">
+        <div class="create-modal__header">
+            <button class="create-modal__back" id="closeCreateModal">&#8592;</button>
+            <h2 class="create-modal__title">Создать мероприятие</h2>
+        </div>
+
+        <form class="create-modal__form">
+            <input class="create-modal__input" type="text" placeholder="Введите название">
+            <textarea class="create-modal__input create-modal__textarea" placeholder="Введите описание"></textarea>
+            <input class="create-modal__input" type="text" placeholder="Введите место проведения">
+            <input class="create-modal__input" type="date">
+            <div class="create-cover">
+                <p class="create-cover__label">Обложка мероприятия</p>
+                <input type="file" id="createCoverInput" accept=".jpg,.jpeg,.png" hidden>
+                <button type="button" class="create-cover__picker" id="selectCreateCoverBtn">
+                    <span class="create-cover__picker-icon">+</span>
+                    <span class="create-cover__picker-text">Добавить фото для обложки</span>
+                </button>
+                <div class="create-cover__preview create-cover__preview--hidden" id="createCoverPreviewWrap">
+                    <img id="createCoverPreview" src="" alt="Предпросмотр обложки">
+                </div>
+                <div class="create-cover__file create-cover__file--hidden" id="createCoverFileName"></div>
+            </div>
+            <button type="submit" class="create-modal__submit">Создать</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="addPhotoModal">
+    <div class="modal__content upload-modal">
+        <div class="upload-modal__header">
+            <button class="upload-modal__back" id="closeAddPhotoModal">&#8592;</button>
+            <h2 class="upload-modal__title">Добавить фото</h2>
+        </div>
+
+        <form class="upload-modal__form" id="addPhotoForm">
+            <p class="upload-modal__hint" id="addPhotoHint">
+                Выберите изображение, чтобы добавить его в текущее мероприятие
+            </p>
+
+            <input type="file" id="addPhotoInput" accept=".jpg,.jpeg,.png" multiple hidden>
+
+            <button type="button" class="upload-modal__dropzone" id="selectPhotoBtn">
+                <span class="upload-modal__dropzone-icon">+</span>
+                <span class="upload-modal__dropzone-text">Нажмите, чтобы выбрать фото</span>
+                <span class="upload-modal__dropzone-subtext">Поддерживаются JPG и PNG</span>
+            </button>
+
+            <div class="upload-modal__preview upload-modal__preview--hidden" id="photoPreviewWrap">
+                <img id="photoPreview" src="" alt="Предпросмотр фото">
+            </div>
+
+            <div class="upload-modal__file upload-modal__file--hidden" id="selectedPhotoName"></div>
+
+            <button type="submit" class="upload-modal__submit" id="savePhotoBtn">Добавить на экран</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="joinModal">
+    <div class="modal__content create-modal">
+        <div class="create-modal__header">
+            <button class="create-modal__back" id="closeJoinModal">&#8592;</button>
+            <h2 class="create-modal__title">Добавить мероприятие</h2>
+        </div>
+
+        <form class="create-modal__form" id="joinEventForm">
+            <input class="create-modal__input" type="text" id="joinEventCode" placeholder="Введите код или ссылку мероприятия">
+            <input class="create-modal__input" type="text" id="joinEventName" placeholder="Название подтянется с сервера" disabled>
+            <button type="submit" class="create-modal__submit">Добавить в список</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="modal">
+    <div class="modal__content">
+        <button class="modal__back" id="closeModal">&#8592;</button>
+
+        <h2 class="modal__title">Зарегистрироваться</h2>
+
+        <form class="modal__form">
+            <input type="email" placeholder="Введите e-mail" required>
+            <input type="password" placeholder="Введите пароль" minlength="8" required>
+            <input type="password" placeholder="Повторно введите пароль" minlength="8" required>
+
+            <button type="submit" class="modal__submit">Зарегистрироваться</button>
+        </form>
+        <p class="modal__switch">
+            Уже есть аккаунт?
+            <a href="#" id="switchToLogin">Войти</a>
+        </p>
+    </div>
+</div>
+
+<div class="modal" id="loginModal">
+    <div class="modal__content">
+        <button class="modal__back" id="closeLoginModal">&#8592;</button>
+
+        <h2 class="modal__title">Войти</h2>
+
+        <form class="modal__form" id="loginForm">
+            <input type="email" placeholder="Введите e-mail" required>
+            <input type="password" placeholder="Введите пароль" required>
+
+            <button type="submit" class="modal__submit">Войти</button>
+        </form>
+
+        <p class="modal__switch">
+            Нет аккаунта?
+            <a href="#" id="switchToRegister">Зарегистрироваться</a>
+        </p>
+    </div>
+</div>
 
 <main class="main-content">
     <div class="view" id="viewList">

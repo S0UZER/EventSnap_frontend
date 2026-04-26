@@ -1009,12 +1009,15 @@ async function openQrModal(event) {
 
 function openMobileSidebar() {
     sidebar?.classList.add('sidebar--mobile-open');
+    sidebar?.classList.add('sidebar--expanded');
     sidebarOverlay?.classList.add('active');
+    mobileBurger?.classList.add('mobile-burger--active');
 }
 
 function closeMobileSidebar() {
     sidebar?.classList.remove('sidebar--mobile-open');
     sidebarOverlay?.classList.remove('active');
+    mobileBurger?.classList.remove('mobile-burger--active');
 }
 
 function openLightbox(photos, startIndex) {
@@ -1037,9 +1040,13 @@ function showLightboxPhoto() {
     const photo = lightboxPhotos[lightboxIndex];
     if (!photo) return;
 
-    lightboxImage.src = photo.src || defaultCover;
-    lightboxImage.alt = photo.name;
-    lightboxCaption.textContent = `${photo.name} — ${lightboxIndex + 1} из ${lightboxPhotos.length}`;
+    lightboxImage.style.opacity = '0';
+    setTimeout(() => {
+        lightboxImage.src = photo.src || defaultCover;
+        lightboxImage.alt = photo.name;
+        lightboxCaption.textContent = `${photo.name} — ${lightboxIndex + 1} из ${lightboxPhotos.length}`;
+        lightboxImage.style.opacity = '1';
+    }, 100);
 }
 
 function lightboxGoPrev() {
@@ -1062,6 +1069,7 @@ if (toggleBtn) {
 
 if (openCreateModal) {
     openCreateModal.addEventListener('click', () => {
+        closeMobileSidebar();
         resetCreateModal();
         createModal.classList.add('active');
     });
@@ -1085,6 +1093,7 @@ if (createModal) {
 
 if (openJoinModal) {
     openJoinModal.addEventListener('click', () => {
+        closeMobileSidebar();
         joinModal.classList.add('active');
     });
 }
@@ -1481,6 +1490,29 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') lightboxGoPrev();
     if (e.key === 'ArrowRight') lightboxGoNext();
 });
+
+// Touch swipe for lightbox (left/right = nav, down = close)
+if (lightbox) {
+    let _touchStartX = 0;
+    let _touchStartY = 0;
+
+    lightbox.addEventListener('touchstart', (e) => {
+        _touchStartX = e.changedTouches[0].clientX;
+        _touchStartY = e.changedTouches[0].clientY;
+    }, { passive: true });
+
+    lightbox.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - _touchStartX;
+        const dy = e.changedTouches[0].clientY - _touchStartY;
+
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+            if (dx < 0) lightboxGoNext();
+            else lightboxGoPrev();
+        } else if (dy > 80 && Math.abs(dy) > Math.abs(dx)) {
+            closeLightbox();
+        }
+    }, { passive: true });
+}
 
 function parseRoute() {
     const hash = window.location.hash.replace(/^#\/?/, '');
