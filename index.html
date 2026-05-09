@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="./css/responsive.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="./scripts/config.js" defer></script>
+    <script src="./scripts/toast.js" defer></script>
     <script src="./scripts/api.js" defer></script>
     <script src="./scripts/auth.js" defer></script>
     <script src="./scripts/filters.js" defer></script>
@@ -413,6 +414,15 @@
     <button class="lightbox__nav lightbox__nav--next" id="lightboxNext" type="button" aria-label="Следующее">&#8594;</button>
     <div class="lightbox__caption" id="lightboxCaption"></div>
 </div>
+
+<!-- Feedback FAB: replace YOUR_GOOGLE_FORM_URL with the real Google Form link -->
+<a class="feedback-fab" href="https://docs.google.com/forms/d/e/1FAIpQLSf5IYjTbP70Vq4cA_Zf58ew0ZAT7bOO38PdSfEKq2rzjsCcfw/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" aria-label="Обратная связь">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="currentColor"/>
+    </svg>
+</a>
+
+<div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
 </body>
 </html>

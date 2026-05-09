@@ -1,0 +1,410 @@
+/* ============================================================
+   RESPONSIVE — loaded last, overrides all component styles
+   ============================================================ */
+
+/* ===== TABLET (< 1100px) ===== */
+@media (max-width: 1100px) {
+    .event-hero,
+    .event-dashboard,
+    .user-event-hero {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== MOBILE (< 768px) ===== */
+@media (max-width: 768px) {
+
+    /* --- Burger / Sidebar --- */
+    .mobile-burger {
+        display: flex;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        z-index: 500;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease, width 0.25s ease;
+        background: #fff;
+        box-shadow: 4px 0 24px rgba(26, 29, 46, 0.1);
+        max-width: 85vw;
+        overflow-y: auto;
+    }
+
+    .sidebar.sidebar--mobile-open {
+        transform: translateX(0);
+    }
+
+    /* Burger → X animation when sidebar open */
+    .mobile-burger--active span:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+    }
+
+    .mobile-burger--active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .mobile-burger--active span:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+    }
+
+    /* --- Main content --- */
+    .main-content {
+        width: 100%;
+        min-width: 0;
+        /* Extra bottom padding prevents FAB from covering content */
+        padding-bottom: max(80px, calc(env(safe-area-inset-bottom, 0px) + 80px));
+    }
+
+    /* --- Main header (event list) --- */
+    .main-header {
+        padding: 72px 16px 16px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .main-header__title {
+        font-size: 24px;
+        min-width: 0;
+    }
+
+    .auth {
+        gap: 8px;
+        flex-shrink: 1;
+        flex-wrap: wrap;
+    }
+
+    .auth__btn {
+        padding: 8px 12px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    /* --- Events grid --- */
+    .events-grid {
+        padding: 12px 16px 24px;
+        gap: 12px;
+    }
+
+    .event-card {
+        width: 100%;
+        min-height: auto;
+    }
+
+    .event-card__img {
+        height: 160px;
+    }
+
+    /* --- Event detail (admin) --- */
+    .ev-header {
+        padding: 72px 16px 16px;
+        gap: 10px;
+    }
+
+    .ev-header__title {
+        font-size: 20px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .ev-header__actions {
+        gap: 8px;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .ev-action-btn {
+        height: 36px;
+        padding: 0 12px;
+        font-size: 12px;
+        flex: 1;
+        text-align: center;
+    }
+
+    .ev-top {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+    }
+
+    .ev-cover {
+        min-height: 200px;
+    }
+
+    .ev-info {
+        padding: 20px;
+    }
+
+    .ev-moderation {
+        padding: 14px 16px;
+    }
+
+    .ev-gallery {
+        padding: 20px 16px 24px;
+        margin-top: 16px;
+    }
+
+    .ev-gallery__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .ev-gallery__title {
+        font-size: 18px;
+    }
+
+    .ev-gallery__controls {
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .event-panel__action {
+        height: 38px;
+        font-size: 12px;
+        padding: 0 12px;
+    }
+
+    /* --- Dashboard (participants + moderation) --- */
+    .event-dashboard {
+        grid-template-columns: 1fr;
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .event-panel {
+        padding: 16px;
+    }
+
+    .event-panel__title {
+        font-size: 18px;
+    }
+
+    .event-panel__header {
+        margin-bottom: 14px;
+    }
+
+    .moderation-card {
+        grid-template-columns: 1fr;
+        padding: 14px;
+        gap: 14px;
+    }
+
+    .moderation-card__preview {
+        height: 200px;
+    }
+
+    .moderation-card__title {
+        font-size: 16px;
+    }
+
+    .moderation-card__actions {
+        gap: 8px;
+    }
+
+    .moderation-card__button {
+        min-width: 100px;
+        height: 40px;
+        font-size: 13px;
+        flex: 1;
+    }
+
+    /* --- Photo grid --- */
+    .photos-grid,
+    .photos-grid--wide {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+    }
+
+    .photo-item__footer {
+        right: 8px;
+        bottom: 8px;
+        left: 8px;
+        padding: 8px 10px;
+        border-radius: 12px;
+    }
+
+    .photo-item__name {
+        font-size: 11px;
+    }
+
+    .photo-item__actions {
+        top: 8px;
+        right: 8px;
+    }
+
+    /* --- User event (participant view) --- */
+    .user-event-shell {
+        padding: 0 16px 24px;
+    }
+
+    .user-event-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .user-event-hero__cover {
+        min-height: 200px;
+    }
+
+    .user-event-hero__content {
+        padding: 20px;
+    }
+
+    .user-event__add-btn {
+        width: 100%;
+        min-width: unset;
+    }
+
+    /* --- QR modal --- */
+    .qr-modal {
+        padding: 24px 16px 20px;
+    }
+
+    .qr-card__image-wrap {
+        width: 180px;
+        height: 180px;
+    }
+
+    /* --- Modals (all) --- */
+    .modal__content {
+        width: min(360px, calc(100vw - 32px));
+    }
+
+    .create-modal {
+        width: min(360px, calc(100vw - 32px));
+    }
+
+    .upload-modal {
+        width: min(420px, calc(100vw - 32px));
+    }
+
+    /* --- Empty state --- */
+    .events-empty {
+        padding: 32px 16px 48px;
+    }
+
+    .events-empty__image {
+        width: 120px;
+    }
+
+    /* --- Participant cards --- */
+    .participant-card {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .participant-card__avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 14px;
+    }
+
+    .participant-card__name {
+        font-size: 14px;
+    }
+
+    /* --- Gallery sort on mobile --- */
+    .gallery-sort__btn {
+        min-height: 44px;
+        padding: 0 14px;
+        font-size: 12px;
+    }
+
+    /* --- Photo delete button touch target --- */
+    .photo-item__delete {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* --- FAB on mobile --- */
+    .feedback-fab {
+        right: 16px;
+    }
+}
+
+/* ===== SMALL PHONES (< 480px) ===== */
+@media (max-width: 480px) {
+    .main-header {
+        padding-top: max(72px, calc(56px + env(safe-area-inset-top, 0px)));
+    }
+
+    .main-header__title {
+        font-size: 20px;
+    }
+
+    .ev-header {
+        padding-top: max(72px, calc(56px + env(safe-area-inset-top, 0px)));
+    }
+
+    .ev-header__title {
+        font-size: 18px;
+    }
+
+    .ev-action-btn {
+        font-size: 11px;
+        padding: 0 8px;
+    }
+
+    .photos-grid,
+    .photos-grid--wide {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .main-content {
+        padding-bottom: max(80px, calc(env(safe-area-inset-bottom, 0px) + 80px));
+    }
+
+    .event-panel__title {
+        font-size: 16px;
+    }
+
+    .event-panel__subtitle {
+        font-size: 12px;
+    }
+
+    .event-card__img {
+        height: 140px;
+    }
+
+    .event-card__name {
+        font-size: 16px;
+    }
+
+    .event-badge {
+        padding: 7px 10px;
+        font-size: 11px;
+    }
+
+    /* --- Editor modal on small phones --- */
+    #editorModal {
+        padding: 8px;
+    }
+
+    .editor-modal {
+        padding: 16px;
+        gap: 10px;
+        border-radius: 18px;
+    }
+
+    .editor-modal__title {
+        font-size: 16px;
+    }
+
+    .editor-modal__subtitle {
+        font-size: 11px;
+    }
+
+    .editor-modal__tab {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+}

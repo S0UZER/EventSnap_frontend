@@ -89,7 +89,7 @@ body {
 .event-card {
     width: 328px;
     min-height: 252px;
-    border-radius: 24px;
+    border-radius: var(--radius-lg);
     border: 1px solid #e8eaf0;
     padding: 16px;
     box-sizing: border-box;
@@ -98,13 +98,35 @@ body {
     gap: 12px;
     cursor: pointer;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
-    background: #fff;
+    background: var(--color-surface);
     flex-shrink: 0;
 }
 
-.event-card:hover {
-    box-shadow: 0 18px 36px rgba(111, 2, 255, 0.1);
-    transform: translateY(-2px);
+.event-card:hover  { box-shadow: 0 18px 36px rgba(111, 2, 255, 0.1); transform: translateY(-2px); }
+.event-card:active { transform: scale(0.99); }
+
+/* ===== SKELETON CARD ===== */
+.event-card--skeleton {
+    pointer-events: none;
+    cursor: default;
+}
+
+.event-card--skeleton .event-card__img {
+    background: linear-gradient(90deg, #eef0f5 0%, #f7f8fc 50%, #eef0f5 100%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s infinite linear;
+}
+
+.skeleton-bar {
+    background: linear-gradient(90deg, #eef0f5 0%, #f7f8fc 50%, #eef0f5 100%);
+    background-size: 200% 100%;
+    border-radius: 8px;
+    animation: skeleton-shimmer 1.4s infinite linear;
+}
+
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 .event-card__img {
@@ -138,7 +160,7 @@ body {
     padding: 7px 12px;
     border-radius: 999px;
     background: #f3efff;
-    color: #6f02ff;
+    color: var(--color-primary);
     font-size: 12px;
     font-weight: 700;
 }
@@ -153,7 +175,7 @@ body {
     background: none;
     border: none;
     font-size: 24px;
-    color: #6f02ff;
+    color: var(--color-primary);
     cursor: pointer;
     padding: 0;
     flex-shrink: 0;
@@ -208,8 +230,8 @@ body {
 .event-badge {
     padding: 10px 14px;
     border-radius: 999px;
-    background: #efe8ff;
-    color: #6f02ff;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
     font-size: 13px;
     font-weight: 700;
 }
@@ -303,7 +325,7 @@ body {
 }
 
 .moderation-toggle--active .moderation-toggle__track {
-    background: linear-gradient(90deg, #6f02ff 0%, #9442ff 100%);
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
 }
 
 .moderation-toggle--active .moderation-toggle__thumb {
@@ -368,8 +390,8 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #efe8ff;
-    color: #6f02ff;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
     font-size: 15px;
     font-weight: 700;
 }
@@ -442,7 +464,7 @@ body {
     height: 46px;
     border: none;
     border-radius: 14px;
-    background: linear-gradient(90deg, #6f02ff 0%, #9442ff 100%);
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
     color: #fff;
     font-size: 14px;
     font-weight: 700;
@@ -534,7 +556,7 @@ body {
     gap: 14px;
     padding: 14px;
     border-radius: 20px;
-    background: #fafaff;
+    background: var(--color-surface-soft);
 }
 
 .participant-card__avatar {
@@ -544,7 +566,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #6f02ff, #9fe9c9);
+    background: linear-gradient(135deg, var(--color-primary), #9fe9c9);
     color: #fff;
     font-size: 16px;
     font-weight: 700;
@@ -644,7 +666,7 @@ body {
     gap: 18px;
     padding: 18px;
     border-radius: 24px;
-    background: #fafaff;
+    background: var(--color-surface-soft);
 }
 
 .moderation-card__preview {
@@ -724,13 +746,13 @@ body {
 }
 
 .moderation-card__comment:focus {
-    border-color: #6f02ff;
+    border-color: var(--color-primary);
 }
 
 .event-empty-state {
     padding: 24px;
     border-radius: 20px;
-    background: #fafaff;
+    background: var(--color-surface-soft);
     text-align: center;
 }
 
@@ -798,13 +820,13 @@ body {
 }
 
 .ev-action-btn--qr {
-    background: linear-gradient(88.98deg, #6f02ff 43.24%, #9442ff 99.13%);
+    background: linear-gradient(88.98deg, var(--color-primary) 43.24%, var(--color-primary-hover) 99.13%);
     color: #fff;
 }
 
 .ev-action-btn--participant {
-    background: #efe8ff;
-    color: #6f02ff;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
 }
 
 .ev-action-btn--danger {
@@ -992,7 +1014,7 @@ body {
     border: none;
     cursor: pointer;
     font-size: 20px;
-    color: #6f02ff;
+    color: var(--color-primary);
     padding: 0;
     line-height: 1;
     flex-shrink: 0;

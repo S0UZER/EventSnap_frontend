@@ -38,7 +38,7 @@
     border: none;
     cursor: pointer;
     font-size: 20px;
-    color: #6f02ff;
+    color: var(--color-primary);
     padding: 0;
     line-height: 1;
     flex-shrink: 0;
@@ -104,7 +104,7 @@
 }
 
 .create-cover__picker:hover {
-    border-color: #6f02ff;
+    border-color: var(--color-primary);
     transform: translateY(-1px);
 }
 
@@ -115,7 +115,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #6f02ff;
+    background: var(--color-primary);
     color: #fff;
     font-size: 26px;
     line-height: 1;
@@ -157,7 +157,7 @@
 }
 
 .create-modal__input:focus {
-    border-bottom-color: #6f02ff;
+    border-bottom-color: var(--color-primary);
 }
 
 .create-modal__submit {
@@ -176,7 +176,7 @@
 }
 
 .create-modal__submit:hover {
-    background: #6f02ff;
+    background: var(--color-primary);
     transform: translateY(-1px);
 }
 
@@ -204,7 +204,7 @@
     background: none;
     cursor: pointer;
     font-size: 22px;
-    color: #6f02ff;
+    color: var(--color-primary);
     padding: 0;
     line-height: 1;
 }
@@ -249,7 +249,7 @@
 }
 
 .upload-modal__dropzone:hover:not(:disabled) {
-    border-color: #6f02ff;
+    border-color: var(--color-primary);
     transform: translateY(-1px);
     background: linear-gradient(180deg, rgba(111, 2, 255, 0.1), rgba(148, 66, 255, 0.04));
 }
@@ -269,7 +269,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #6f02ff;
+    background: var(--color-primary);
     color: #fff;
     font-size: 34px;
     line-height: 1;
@@ -316,7 +316,7 @@
     height: 52px;
     border: none;
     border-radius: 15px;
-    background: linear-gradient(88.98deg, #6f02ff 43.24%, #9442ff 99.13%);
+    background: linear-gradient(88.98deg, var(--color-primary) 43.24%, var(--color-primary-hover) 99.13%);
     color: #fff;
     font-size: 16px;
     font-weight: 700;

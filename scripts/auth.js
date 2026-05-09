@@ -17,6 +17,7 @@ const auth = {
         try {
             return JSON.parse(raw);
         } catch (err) {
+            console.error('[auth] failed to parse stored user', err);
             localStorage.removeItem(CONFIG.USER_KEY);
             return null;
         }
@@ -155,7 +156,7 @@ function setupAuthForms() {
                 closeAuthGate();
                 updateAuthUI();
             } catch (err) {
-                alert(err.message);
+                showToast(err.message || 'Ошибка входа', 'error');
             } finally {
                 setButtonLoading(submitButton, false);
             }
@@ -176,7 +177,7 @@ function setupAuthForms() {
             const submitButton = registerForm.querySelector('button[type="submit"]');
 
             if (password !== passwordRepeat) {
-                alert('Пароли не совпадают');
+                showToast('Пароли не совпадают', 'error');
                 return;
             }
 
@@ -192,7 +193,7 @@ function setupAuthForms() {
                 closeAuthGate();
                 updateAuthUI();
             } catch (err) {
-                alert(err.message);
+                showToast(err.message || 'Ошибка регистрации', 'error');
             } finally {
                 setButtonLoading(submitButton, false);
             }

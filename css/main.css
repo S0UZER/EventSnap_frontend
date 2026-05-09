@@ -1,5 +1,43 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Wix+Madefor+Display:wght@400..800&display=swap');
 
+/* ===== DESIGN TOKENS ===== */
+:root {
+    /* Brand */
+    --color-primary:      #6f02ff;
+    --color-primary-hover: #9442ff;
+    --color-primary-soft: #efe8ff;
+    --color-primary-tint: #f3efff;
+    --gradient-primary:   linear-gradient(88.98deg, #6f02ff 43.24%, #9442ff 99.13%);
+
+    /* Surface */
+    --color-bg:           #fbfbff;
+    --color-surface:      #fff;
+    --color-surface-soft: #fafaff;
+    --color-surface-muted: #f3f4f8;
+
+    /* Text */
+    --color-text:          #1a1d2e;
+    --color-text-muted:    #6b7280;
+    --color-text-faint:    #8b90a0;
+    --color-text-disabled: #9ea3b0;
+
+    /* State */
+    --color-danger:      #b42318;
+    --color-danger-soft: #ffe7eb;
+    --color-success:     #15803d;
+
+    /* Shadows */
+    --shadow-card:    0 18px 36px rgba(26, 29, 46, 0.05);
+    --shadow-modal:   0 18px 48px rgba(26, 29, 46, 0.18);
+    --shadow-primary: 0 4px 16px rgba(111, 2, 255, 0.35);
+
+    /* Radii */
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+    --radius-xl: 28px;
+}
+
 *,
 *::before,
 *::after {
@@ -35,8 +73,8 @@ button {
     width: 44px;
     height: 44px;
     border: none;
-    border-radius: 12px;
-    background: #fff;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
     box-shadow: 0 4px 16px rgba(26, 29, 46, 0.12);
     cursor: pointer;
     flex-direction: column;
@@ -50,7 +88,7 @@ button {
     display: block;
     width: 100%;
     height: 2px;
-    background: #1a1d2e;
+    background: var(--color-text);
     border-radius: 2px;
     transition: all 0.2s ease;
 }
@@ -71,7 +109,7 @@ button {
 /* ===== GALLERY SORT ===== */
 .gallery-sort {
     display: flex;
-    background: #f3f4f8;
+    background: var(--color-surface-muted);
     border-radius: 10px;
     padding: 3px;
     gap: 2px;
@@ -83,7 +121,7 @@ button {
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: #8b90a0;
+    color: var(--color-text-faint);
     font-size: 13px;
     font-weight: 600;
     font-family: "Wix Madefor Display", sans-serif;
@@ -92,8 +130,93 @@ button {
 }
 
 .gallery-sort__btn--active {
-    background: #fff;
-    color: #1a1d2e;
+    background: var(--color-surface);
+    color: var(--color-text);
     box-shadow: 0 2px 6px rgba(26, 29, 46, 0.08);
 }
 
+/* ===== CONTENT SCROLL LOCK (when any modal is open) ===== */
+.main-content.modal-open {
+    overflow: hidden;
+}
+
+/* Smooth scrolling in scrollable containers */
+.main-content,
+.modal__content,
+.upload-modal,
+.create-modal {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ===== MODAL OPEN ANIMATION ===== */
+.modal__content,
+.create-modal,
+.upload-modal,
+.qr-modal,
+.editor-modal {
+    animation: modalIn 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ===== FEEDBACK FAB ===== */
+.feedback-fab {
+    position: fixed;
+    right: 24px;
+    bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-primary);
+    z-index: 900;
+    text-decoration: none;
+    touch-action: manipulation;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.feedback-fab:hover  { opacity: 0.88; transform: scale(1.06); }
+.feedback-fab:active { transform: scale(0.94); }
+
+/* ===== TOAST NOTIFICATIONS ===== */
+.toast-stack {
+    position: fixed;
+    left: 50%;
+    bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 5000;
+    pointer-events: none;
+    width: min(420px, calc(100vw - 32px));
+}
+
+.toast {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--color-text);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: "Wix Madefor Display", sans-serif;
+    line-height: 1.4;
+    box-shadow: var(--shadow-modal);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: auto;
+    word-break: break-word;
+}
+
+.toast--visible  { opacity: 1; transform: translateY(0); }
+.toast--error    { background: var(--color-danger); }
+.toast--success  { background: var(--color-success); }

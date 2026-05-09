@@ -426,7 +426,7 @@ const imageEditor = {
     _goToFilterStep() {
         const cropped = this._getCroppedCanvas();
         if (!cropped || cropped.width === 0) {
-            alert('Не удалось получить обрезанное изображение. Попробуйте ещё раз.');
+            showToast('Не удалось получить обрезанное изображение. Попробуйте ещё раз.', 'error');
             return;
         }
         this._croppedCanvas = cropped;
@@ -501,14 +501,16 @@ const imageEditor = {
         }
 
         if (!this._croppedCanvas) {
-            alert('Нет изображения для сохранения');
+            showToast('Нет изображения для сохранения', 'error');
             return;
         }
 
         const finalCanvas = applyFilterToCanvas(this._croppedCanvas, this._selectedFilterId, this._filterIntensity);
         finalCanvas.toBlob((blob) => {
             if (!blob) {
-                alert('Не удалось сохранить изображение');
+                showToast('Не удалось сохранить изображение', 'error');
+                this._reject?.(new Error('toBlob returned null'));
+                this._close();
                 return;
             }
             const name = (this._originalFile?.name || 'photo.jpg').replace(/\.[^.]+$/, '');

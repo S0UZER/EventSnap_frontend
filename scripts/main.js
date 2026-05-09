@@ -295,13 +295,18 @@ async function loadEventsFromBackend() {
         return;
     }
 
+    if (events.length === 0) {
+        renderEventsSkeleton();
+    }
+
     try {
         const response = await api.events.list({ role: 'all', limit: 100 });
         events = (response.items || []).map(normalizeEvent);
         renderEvents();
     } catch (err) {
         if (err.status !== 401) {
-            alert(`Не удалось загрузить мероприятия: ${err.message}`);
+            console.error('[events] load failed', err);
+            showToast(`Не удалось загрузить мероприятия: ${err.message}`, 'error');
         }
     }
 }
@@ -356,6 +361,23 @@ async function refreshCurrentEvent() {
     return event;
 }
 
+function renderEventsSkeleton(count) {
+    if (!eventsGrid) return;
+    count = count || 4;
+    eventsGrid.innerHTML = '';
+    eventsEmpty?.classList.add('events-empty--hidden');
+    for (let i = 0; i < count; i++) {
+        const card = document.createElement('div');
+        card.className = 'event-card event-card--skeleton';
+        card.innerHTML = `
+            <div class="event-card__img"></div>
+            <div class="skeleton-bar" style="height:16px;width:70%;margin-top:8px;"></div>
+            <div class="skeleton-bar" style="height:14px;width:45%;margin-top:8px;"></div>
+        `;
+        eventsGrid.appendChild(card);
+    }
+}
+
 function renderEvents() {
     if (!eventsGrid) return;
 
@@ -407,6 +429,7 @@ function resetCreateModal() {
     }
 
     if (createCoverPreview) {
+        if (createCoverPreview.src?.startsWith('blob:')) URL.revokeObjectURL(createCoverPreview.src);
         createCoverPreview.src = '';
     }
 
@@ -427,6 +450,7 @@ async function handleCreateCoverSelection(file) {
         const editedFile = await openImageEditor(file);
 
         selectedCreateCoverFile = editedFile;
+        if (createCoverPreview.src?.startsWith('blob:')) URL.revokeObjectURL(createCoverPreview.src);
         createCoverPreview.src = URL.createObjectURL(editedFile);
         createCoverPreviewWrap.classList.remove('create-cover__preview--hidden');
         createCoverFileName.textContent = editedFile.name;
@@ -434,9 +458,9 @@ async function handleCreateCoverSelection(file) {
     } catch (err) {
         if (err !== 'cancelled') {
             console.error('Ошибка редактирования:', err);
-            alert('Не удалось обработать изображение');
+            showToast('Не удалось обработать изображение', 'error');
         }
-
+    } finally {
         createCoverInput.value = '';
     }
 }
@@ -450,6 +474,7 @@ function resetAddPhotoModal() {
     }
 
     if (photoPreview) {
+        if (photoPreview.src?.startsWith('blob:')) URL.revokeObjectURL(photoPreview.src);
         photoPreview.src = '';
     }
 
@@ -521,7 +546,7 @@ async function handleSelectedPhotos(files) {
             }
 
             console.error('Ошибка редактирования:', err);
-            alert('Не удалось обработать одно из изображений');
+            showToast('Не удалось обработать одно из изображений', 'error');
         }
     }
 
@@ -531,6 +556,7 @@ async function handleSelectedPhotos(files) {
     }
 
     selectedPhotoFiles = editedFiles;
+    if (photoPreview.src?.startsWith('blob:')) URL.revokeObjectURL(photoPreview.src);
     photoPreview.src = URL.createObjectURL(editedFiles[0]);
     photoPreviewWrap.classList.remove('upload-modal__preview--hidden');
     selectedPhotoName.textContent = editedFiles.length === 1
@@ -560,9 +586,18 @@ function getImageSize(file) {
     });
 }
 
+function releaseLocalCoverUrl(eventId) {
+    const url = localCoverUrls.get(eventId);
+    if (url) {
+        URL.revokeObjectURL(url);
+        localCoverUrls.delete(eventId);
+    }
+}
+
 async function uploadCover(eventId, file) {
     const upload = await api.events.createCoverUploadUrl(eventId, file.type || 'image/jpeg');
     await api.uploadToPresignedUrl(upload.upload_url, file, upload);
+    releaseLocalCoverUrl(eventId);
     localCoverUrls.set(eventId, URL.createObjectURL(file));
     return api.events.completeCoverUpload(eventId, upload.s3_key);
 }
@@ -643,7 +678,7 @@ function createPhotoCard(photo, photosForLightbox) {
                 await api.photos.delete(photo.id);
                 await refreshCurrentEvent();
             } catch (err) {
-                alert(`Не удалось удалить фото: ${err.message}`);
+                showToast(`Не удалось удалить фото: ${err.message}`, 'error');
             }
         });
     }
@@ -687,7 +722,7 @@ function createUserPhotoCard(photo, photosForLightbox) {
                 await api.photos.delete(photo.id);
                 await refreshCurrentEvent();
             } catch (err) {
-                alert(`Не удалось удалить фото: ${err.message}`);
+                showToast(`Не удалось удалить фото: ${err.message}`, 'error');
             }
         });
     }
@@ -792,7 +827,7 @@ function renderModerationQueue(event) {
                 await api.photos.approve(photo.id, commentField.value.trim() || null);
                 await refreshCurrentEvent();
             } catch (err) {
-                alert(`Не удалось одобрить фото: ${err.message}`);
+                showToast(`Не удалось одобрить фото: ${err.message}`, 'error');
             } finally {
                 setControlLoading(approveButton, false);
             }
@@ -806,7 +841,7 @@ function renderModerationQueue(event) {
                 await api.photos.reject(photo.id, comment);
                 await refreshCurrentEvent();
             } catch (err) {
-                alert(`Не удалось отклонить фото: ${err.message}`);
+                showToast(`Не удалось отклонить фото: ${err.message}`, 'error');
             } finally {
                 setControlLoading(rejectButton, false);
             }
@@ -871,7 +906,7 @@ async function openEvent(eventId, { addHistory = true } = {}) {
     try {
         await refreshCurrentEvent();
     } catch (err) {
-        alert(`Не удалось открыть мероприятие: ${err.message}`);
+        showToast(`Не удалось открыть мероприятие: ${err.message}`, 'error');
     }
 }
 
@@ -892,7 +927,7 @@ async function openUserEvent(eventId, { addHistory = true } = {}) {
     try {
         await refreshCurrentEvent();
     } catch (err) {
-        alert(`Не удалось открыть мероприятие: ${err.message}`);
+        showToast(`Не удалось открыть мероприятие: ${err.message}`, 'error');
     }
 }
 
@@ -904,6 +939,7 @@ async function deleteCurrentEvent() {
     }
 
     await api.events.delete(event.id);
+    releaseLocalCoverUrl(event.id);
     currentEventId = null;
     viewEvent.classList.add('view--hidden');
     viewUserEvent.classList.add('view--hidden');
@@ -929,6 +965,7 @@ function extractQrToken(value) {
         const parts = url.pathname.split('/').filter(Boolean);
         return parts[parts.length - 1] || trimmed;
     } catch (err) {
+        console.error('[qr] token parse failed', err);
         return trimmed.split('/').filter(Boolean).pop() || trimmed;
     }
 }
@@ -978,7 +1015,7 @@ async function joinFromLocationIfNeeded() {
         await joinByQrToken(qrToken);
         clearJoinTokenFromLocation();
     } catch (err) {
-        alert(`Не удалось присоединиться к мероприятию: ${err.message}`);
+        showToast(`Не удалось присоединиться к мероприятию: ${err.message}`, 'error');
     }
 }
 
@@ -1003,7 +1040,7 @@ async function openQrModal(event) {
 
         qrModal.classList.add('active');
     } catch (err) {
-        alert(`Не удалось получить QR-ссылку: ${err.message}`);
+        showToast(`Не удалось получить QR-ссылку: ${err.message}`, 'error');
     }
 }
 
@@ -1016,6 +1053,7 @@ function openMobileSidebar() {
 
 function closeMobileSidebar() {
     sidebar?.classList.remove('sidebar--mobile-open');
+    sidebar?.classList.remove('sidebar--expanded');
     sidebarOverlay?.classList.remove('active');
     mobileBurger?.classList.remove('mobile-burger--active');
 }
@@ -1063,7 +1101,11 @@ function lightboxGoNext() {
 
 if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('sidebar--expanded');
+        if (sidebar.classList.contains('sidebar--mobile-open')) {
+            closeMobileSidebar();
+        } else {
+            sidebar.classList.toggle('sidebar--expanded');
+        }
     });
 }
 
@@ -1122,7 +1164,7 @@ if (joinEventForm) {
         const submitButton = joinEventForm.querySelector('button[type="submit"]');
 
         if (!qrToken) {
-            alert('Введите код или ссылку мероприятия');
+            showToast('Введите код или ссылку мероприятия', 'info');
             return;
         }
 
@@ -1133,7 +1175,7 @@ if (joinEventForm) {
             joinEventForm.reset();
             joinModal.classList.remove('active');
         } catch (err) {
-            alert(`Не удалось добавить мероприятие: ${err.message}`);
+            showToast(`Не удалось добавить мероприятие: ${err.message}`, 'error');
         } finally {
             setControlLoading(submitButton, false);
         }
@@ -1174,7 +1216,7 @@ if (createForm) {
             createModal.classList.remove('active');
             await openEvent(newEvent.id);
         } catch (err) {
-            alert(`Не удалось создать мероприятие: ${err.message}`);
+            showToast(`Не удалось создать мероприятие: ${err.message}`, 'error');
         } finally {
             setControlLoading(submitButton, false);
         }
@@ -1247,7 +1289,8 @@ if (copyQrLinkBtn) {
                     copyQrLinkBtn.textContent = 'Скопировать ссылку';
                 }, 1800);
             })
-            .catch(() => {
+            .catch((err) => {
+                console.error('[clipboard] copy failed', err);
                 prompt('Скопируйте ссылку', link);
             });
     });
@@ -1325,7 +1368,7 @@ if (addPhotoForm) {
             closeUploadModal();
         } catch (err) {
             console.error('Ошибка загрузки фото:', err);
-            alert(`Не удалось загрузить фото: ${err.message}`);
+            showToast(`Не удалось загрузить фото: ${err.message}`, 'error');
         } finally {
             setControlLoading(savePhotoBtn, false);
             updateAddPhotoModalState();
@@ -1350,7 +1393,7 @@ if (moderationToggle) {
             currentEvent.moderationEnabled = Boolean(gallery.moderation_enabled);
             await refreshCurrentEvent();
         } catch (err) {
-            alert(`Не удалось обновить настройки галереи: ${err.message}`);
+            showToast(`Не удалось обновить настройки галереи: ${err.message}`, 'error');
         } finally {
             moderationToggle.disabled = false;
         }
@@ -1366,7 +1409,7 @@ if (deleteEventBtn) {
         try {
             await deleteCurrentEvent();
         } catch (err) {
-            alert(`Не удалось удалить мероприятие: ${err.message}`);
+            showToast(`Не удалось удалить мероприятие: ${err.message}`, 'error');
         }
     });
 }
@@ -1425,10 +1468,6 @@ if (mobileBurger) {
 
 if (sidebarOverlay) {
     sidebarOverlay.addEventListener('click', closeMobileSidebar);
-}
-
-if (toggleBtn) {
-    toggleBtn.addEventListener('click', closeMobileSidebar);
 }
 
 if (closeLoginModalBtn) {
@@ -1578,3 +1617,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
+
+// Prevent main-content scroll when any modal or overlay is open
+(function initScrollLock() {
+    const mainContent = document.querySelector('.main-content');
+    const allModals = document.querySelectorAll('.modal, .lightbox, #editorModal');
+    const observer = new MutationObserver(() => {
+        const anyOpen = Array.from(allModals).some(m => m.classList.contains('active'));
+        mainContent?.classList.toggle('modal-open', anyOpen);
+    });
+    allModals.forEach(m => observer.observe(m, { attributes: true, attributeFilter: ['class'] }));
+})();

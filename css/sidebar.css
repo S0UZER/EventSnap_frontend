@@ -95,7 +95,7 @@
     justify-content: space-between;
     margin-left: 24px;
     margin-top: 65px;
-    background: linear-gradient(88.98deg, #6F02FF 43.24%, #9442FF 99.13%);
+    background: linear-gradient(88.98deg, var(--color-primary) 43.24%, var(--color-primary-hover) 99.13%);
 }
 
 .sidebar--expanded .sidebar__btn--create > img { display: none; }
@@ -225,7 +225,7 @@
 }
 
 .sidebar--expanded .sidebar__btn:hover .sidebar__label {
-    color: #6F02FF;
+    color: var(--color-primary);
     transition: 0.2s;
 }
 
@@ -238,7 +238,7 @@
 .sidebar--expanded .sidebar__btn--file:hover .sidebar__label,
 .sidebar--expanded .sidebar__btn--rubbish:hover .sidebar__label,
 .sidebar--expanded .sidebar__btn--hide:hover .sidebar__label {
-    color: #6F02FF;
+    color: var(--color-primary);
 }
 
 .sidebar__btn img {
